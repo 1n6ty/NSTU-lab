@@ -15,6 +15,12 @@ std::vector<std::string> gain_input(){
             *out.rbegin() += sym;
         }
     }
+
+    for(std::vector<std::string>::iterator it = out.begin(); it != out.end() - 1;){
+        if(*it == *out.rbegin()) it = out.erase(it);
+        else it ++;
+    }
+
     return out;
 } 
 
