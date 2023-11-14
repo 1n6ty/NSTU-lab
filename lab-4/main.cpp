@@ -36,19 +36,15 @@ char check_symmetry(std::string& str){
 }
 
 int main(){
-    system("chcp 1251");
-    _setmode(_fileno(stdout), 0x00020000);
-
-
     int v;
 
-    std::wcout << L"Введите 1, если хотите найти симметричные слова в последовательности. \n"
-                << L"Введите 2, если хотите найти слова, в котрых первая буква входит в слово еще раз. \n"
-                << L"Введите 3, если хотите найти слова, в котрых нет повторяющихся букв. \n"
-                << L"Введите 4, если хотите найти слова, в котрых каждая буква входит в слово не менее двух раз. \n";
+    std::cout << "Type 1, if you want to find symmetric words. \n"
+                << "Type 2, if you want to find words where the first letter occurs one more time. \n"
+                << "Type 3, if you want to find words where no letter repeats. \n"
+                << "Type 4, if you want to find words where each letter occurs not less than twice. \n";
     std::cin >> v;
 
-    std::wcout << L"Введите непустую последовательность слов (не более 50), в каждом слове не более восьми символов. Слова разделены пробелом, за по-следним словом точка. \n";
+    std::wcout << "Input sequence: \n";
     std::vector<std::string> input = gain_input();
 
     if(v == 1){        
