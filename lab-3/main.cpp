@@ -36,7 +36,7 @@ int main(){
     }
 
     std::wcout << L"Размер полученного массива: " << N << std::endl;
-    std::wcout << L"Содержимое полученного массива:";
+    std::wcout << L"Содержимое полученного массива: ";
     for (int i = 0; i < N; i++) {
         std::wcout << array[i] << " ";
     }
