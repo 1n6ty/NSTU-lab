@@ -14,16 +14,7 @@ char not_double(std::string& str){
             count[e] = 1;
         }
     }
-
-
     return 1;
-    
-    /*for (int i = 0; i < str.size(); i++){
-        if(count(str.begin(), str.end(), str[i]) = 1){
-            c++;
-        }
-    }*/
-     
 }
 
 int main(){
@@ -36,10 +27,9 @@ int main(){
     assert(not_double(un2) == 0);
 
     un3 = "djaishajb";
-    assert(not_double(un3) == 1);
+    assert(not_double(un3) == 0);
 
     un4 = "fhjsl";
-    assert(not_double(un4) == 0);
+    assert(not_double(un4) == 1);
     
-    //std::cout << "All passed!" << '\n';
 }
