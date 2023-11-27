@@ -19,7 +19,7 @@ int main(){
     int s1 = 0;
 
 
-    std::wcout << L"Введите 20 целых чисел для массива х. \n";
+    std::wcout << L"Введите 20целых чисел для массива х. \n";
     for (int i = 0; i < 20; i++){
         std::cin >> x[i];
     }
@@ -29,7 +29,7 @@ int main(){
         std::cin >> y[j];
     }
 
-    if(sym > 0){
+    if(sym() > 0){
         for (int r = 0; r < 20; r++){
             s1 += x[r] * x[r];
         }
