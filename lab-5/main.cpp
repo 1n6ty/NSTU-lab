@@ -8,7 +8,9 @@ int sym(int x[], int y[]){
     for (int k = 0; k < 20; k++){
         summa += x[k]*y[k];
     }
-    return summa;
+    
+    if(summa > 0) return 1;
+    else return 0;
 }
 
 int main(){
@@ -29,7 +31,7 @@ int main(){
         std::cin >> y[j];
     }
 
-    if(sym() > 0){
+    if(sym(x, y)){
         for (int r = 0; r < 20; r++){
             s1 += x[r] * x[r];
         }
