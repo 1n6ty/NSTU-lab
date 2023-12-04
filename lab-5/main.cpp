@@ -18,7 +18,7 @@ int main(){
 
     int x[20];
     int y[20];
-    int s1 = 0;
+    int u = 0;
 
 
     std::wcout << L"Введите 20 целых чисел для массива х. \n";
@@ -32,16 +32,18 @@ int main(){
     }
 
     if(sym(x, y)){
+        std::wcout << L"Сценарий 1. \n";
         for (int r = 0; r < 20; r++){
-            s1 += x[r] * x[r];
+            u += x[r] * x[r];
         }
     }else{
+        std::wcout << L"Сценарий 2. \n";
         for (int t = 0; t < 20; t++){
-            s1 += y[t] * y[t];
+            u += y[t] * y[t];
         }
     }
 
-    std::wcout << s1;
+    std::wcout << u;
     
     return 0;
 }
