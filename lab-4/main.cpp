@@ -4,8 +4,6 @@
 #include <math.h>
 #include <cstring>
 
-const int MAX_LENGTH = 40;
-
 int main(){
 
     std::string str;
@@ -14,13 +12,14 @@ int main(){
 
     std::cout << "Enter a sequence of no more than 40 lowercase Latin letters followed by spaces. \n";
 
-    while (length < MAX_LENGTH && std::cin.get(d) && d != '\n') {
+    while (length < 40 && std::cin.get(d) && d != '\n') {
         if (d >= 'a' && d <= 'z') {
             str += d;
         } else {
             std::cout << "Incorrect characters have been entered. \n";
             return 0;
         }
+        length++;
     }
 
     if(str.find("abc") != std::string::npos){
