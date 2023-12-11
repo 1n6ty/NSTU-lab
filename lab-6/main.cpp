@@ -157,7 +157,7 @@ std::pair<Call_b*, size_t> getCityMinutes(FILE *f){
 
 struct Call_c{
     char *date, *city, *phone_from;
-    int cost;
+    int cost, minutes;
 };
 
 Call_c init_call_c(){
@@ -166,12 +166,52 @@ Call_c init_call_c(){
     call_c.date = (char*) malloc(sizeof(char) * 10);
     call_c.city = (char*) malloc(sizeof(char) * 6);
     call_c.phone_from = (char*) malloc(sizeof(char) * 11);
+    call_c.minutes = 0;
 
     return call_c;
 }
 
 std::pair<Call_c *, size_t> getReceipt(FILE *T1, FILE *T2){
-    // TODO Do task_c!
+    unsigned long hash;
+    std::map<unsigned long, int> cost;
+
+    char *city = (char*) malloc(sizeof(char) * 6);
+    int call_cost;
+    while (fscanf(T2, "%6s, %d\n", city, &call_cost) == 2){
+        hash = _hash(city);
+        cost[hash] = call_cost;
+    }
+
+    size_t arr_size = 0, arr_cap = 16;
+    Call_c call_c = init_call_c(), *arr = (Call_c *) malloc(sizeof(Call_c) * arr_cap);
+
+    char *phone_to = (char*) malloc(sizeof(char) * 11);
+    while(fscanf(T1, "%10s, %6s, %11s, %11s, %d\n", call_c.date, call_c.city, call_c.phone_from, phone_to, &call_c.minutes) == 5){
+        hash = _hash(call_c.city);
+
+        call_c.cost = cost[hash] * call_c.minutes;
+
+        arr[arr_size] = call_c;
+        arr_size ++;
+
+        if(arr_cap == arr_size){
+            arr_cap *= 2;
+            if((arr = (Call_c *) realloc(arr, arr_cap)) == NULL){
+                printf("error\n");
+                return {NULL, 0};
+            }
+        }
+
+        call_c = init_call_c();
+    }
+    
+    fseek(T1, 0, SEEK_SET);
+    fseek(T2, 0, SEEK_SET);
+
+    free(phone_to);
+    free(city);
+
+    return {arr, arr_size};
 }
 
 int main(){
@@ -182,13 +222,22 @@ int main(){
         return EXIT_FAILURE;
     }
 
-    std::pair<Call_b *, size_t> task_b = getCityMinutes(T1);
+    printf("\ntask_a\n");
+    printMostWanted(T1); // task_a
+
+    printf("\ntask_b\n");
+    std::pair<Call_b *, size_t> task_b = getCityMinutes(T1); // task_b
 
     for(size_t i = 0; i < task_b.second; i++){
         std::cout << task_b.first[i].city << ' ' << task_b.first[i].all_minutes << '\n';
     }
 
-    printMostWanted(T1);
+    printf("\ntask_c\n");
+    std::pair<Call_c *, size_t> task_c = getReceipt(T1, T2); //task_c
+
+    for(size_t i = 0; i < task_c.second; i++){
+        std::cout << task_c.first[i].city << ' ' << task_c.first[i].date << ' ' << task_c.first[i].phone_from << ' ' << task_c.first[i].minutes << ' ' << task_c.first[i].cost << '\n';
+    }
 
     fclose(T1);
     fclose(T2);
