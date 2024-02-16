@@ -7,9 +7,9 @@ namespace List{
         Node *next;
     };
 
-    char insert_node(List::Node *head, int ind, bool fst, float *sec){
+    char insert_node(List::Node *head, int ind, bool fst, float *sec){ // Insert node to ind
         List::Node *buff_node = head;
-        for(int i = 0; i < ind - 1; i++){
+        for(int i = 0; i < ind - 1; i++){ // Iterate list to Node before ind
             if(buff_node->next != NULL){
                 buff_node = buff_node->next;
             } else{
@@ -17,19 +17,19 @@ namespace List{
             }
         }
 
-        List::Node *new_node = new List::Node();
+        List::Node *new_node = new List::Node(); // Create a new node and fill it with data
         new_node->fst = fst;
         new_node->sec = sec;
 
-        new_node->next = buff_node->next;
+        new_node->next = buff_node->next; // Change pointers
         buff_node->next = new_node;
         
         return 1;
     }
 
-    char del_node(List::Node *head, int ind){
+    char del_node(List::Node *head, int ind){ // Delete ind
         List::Node *buff_node = head;
-        for(int i = 0; i < ind - 1; i++){
+        for(int i = 0; i < ind - 1; i++){ // Iterate list to Node before ind
             if(buff_node->next != NULL){
                 buff_node = buff_node->next;
             } else{
@@ -39,16 +39,16 @@ namespace List{
 
         List::Node *deleted = buff_node->next;
         if(buff_node->next != NULL){
-            buff_node->next = buff_node->next->next;
+            buff_node->next = buff_node->next->next; // Change pointers
         } else{
             return 0;
         }
 
-        delete deleted;
+        delete deleted; // Free deleted node
         return 1;
     }
 
-    char free_all(List::Node *head){
+    char free_all(List::Node *head){ // Free all nodes
         List::Node *buff_node = head, *prev_buff_node = NULL;
         while(buff_node != NULL){
             prev_buff_node = buff_node;
@@ -59,7 +59,7 @@ namespace List{
         return 1;
     }
 
-    void print_list(List::Node *head){
+    void print_list(List::Node *head){ // Print the whole list
         while(head != NULL){
             std::cout << "bool: " << head->fst << "; float: " << *(head->sec) << "; -> ";
             head = head->next;
