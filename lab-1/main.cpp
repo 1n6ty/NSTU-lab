@@ -70,22 +70,34 @@ namespace List{
 
 int main(){
 
+    int v;
     float num1 = 2.7, num2 = 3.3;
-    
+
     List::Node *p = new List::Node();
     p->fst = false;
     p->sec = &num1;
     p->next = NULL;
+    List::insert_node(p, 1, true, &num2);
 
-    List::insert_node(p, 1, true, &num1);
-    List::insert_node(p, 2, false, &num2);
+    std::cout << "If you want to delete an element, enter 1. If you want to enter a new element, enter 2\n";
+    std::cin >> v;
 
-    List::print_list(p);
-
-    List::del_node(p, 1);
-
-    List::print_list(p);
-
+    if(v == 1){
+        int ind;
+        std::cout << "Enter the items you want to remove\n";
+        std::cin >> ind;
+        List::del_node(p, ind);
+        List::print_list(p);
+    }else if (v == 2){
+        int ind_ins;
+        bool fst_ins;
+        float sec_ins;
+        std::cout << "Enter the index, boolean and fractional value for the element you want to insert separated by space\n";
+        std::cin >> ind_ins >> fst_ins >> sec_ins;
+        List::insert_node(p, ind_ins, fst_ins, &sec_ins);
+        List::print_list(p);
+    }else std::cout << "incorrect number entered";
+    
     List::free_all(p);
 
     return 0;
