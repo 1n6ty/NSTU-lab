@@ -66,6 +66,48 @@ namespace List{
         }
         std::cout << '\n';
     }
+
+    char swap(List::Node *head, int ind1, int ind2){
+        ind2 = std::max(ind1, ind2);
+        ind1 = std::min(ind1, ind2);
+        
+        List::Node *buff_node = head, *fst_node_b = NULL, *sec_node_b = NULL;
+
+        for(int i = 0; i <= ind2 - 1; i++){ // Iterate list to Node before ind
+            if(i == ind1 - 1){
+                fst_node_b = buff_node;
+            } else if(i == ind2 - 1){
+                sec_node_b = buff_node;
+            }
+
+            if(buff_node->next != NULL){
+                buff_node = buff_node->next;
+            } else{
+                return 0;
+            }
+        }
+
+        List::Node *fst_node = fst_node_b->next, *sec_node = sec_node_b->next;
+
+        buff_node = fst_node_b->next;
+        if(fst_node_b->next == sec_node_b){
+            fst_node->next = sec_node->next;
+            sec_node->next = fst_node;
+            fst_node_b->next = sec_node;
+
+            return 1;
+        }
+
+        List::Node *fst_node_a = fst_node_b->next->next, *sec_node_a = sec_node_b->next->next;
+        
+        fst_node->next = sec_node_a;
+        sec_node->next = fst_node_a;
+
+        fst_node_b->next = sec_node;
+        sec_node_b->next = fst_node;
+
+        return 1;
+    }
 }
 
 int main(){
@@ -78,8 +120,12 @@ int main(){
     p->sec = &num1;
     p->next = NULL;
     List::insert_node(p, 1, true, &num2);
+    List::insert_node(p, 2, false, &num2);
+    List::insert_node(p, 3, true, &num1);
 
-    std::cout << "If you want to delete an element, enter 1. If you want to enter a new element, enter 2\n";
+    List::print_list(p);
+
+    std::cout << "If you want to delete an element, enter 1. If you want to enter a new element, enter 2. If you want to swap to elements, enter 3\n";
     std::cin >> v;
 
     if(v == 1){
@@ -95,6 +141,12 @@ int main(){
         std::cout << "Enter the index, boolean and fractional value for the element you want to insert separated by space\n";
         std::cin >> ind_ins >> fst_ins >> sec_ins;
         List::insert_node(p, ind_ins, fst_ins, &sec_ins);
+        List::print_list(p);
+    } else if (v == 3){
+        int ind_1, ind_2;
+        std::cout << "Enter two indexes to swap\n";
+        std::cin >> ind_1 >> ind_2;
+        List::swap(p, ind_1, ind_2);
         List::print_list(p);
     }else std::cout << "incorrect number entered";
     
