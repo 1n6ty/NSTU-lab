@@ -11,7 +11,7 @@ namespace S {
         Node *top;
     } stack;
 
-    stack* create(int max_e){
+    stack* create(int max_e){ // Create stack and fill it with initial values
         stack *q = new stack;
 
         q->max_e = max_e;
@@ -24,7 +24,7 @@ namespace S {
 
     char free(stack *q){
         Node *buff;
-        while(q->n > 0){
+        while(q->n > 0){ // Consistenly free all nodes
             buff = q->top;
 
             q->top = q->top->next;
@@ -40,10 +40,8 @@ namespace S {
         return q->n == 0;
     }
 
-    char insert(stack *q, int data){
-        if(q->n + 1 > q->max_e){
-            return 1;
-        }
+    char insert(stack *q, int data){ // Insert new node with data at the top of the stack
+        if(q->n + 1 > q->max_e) return 1; // Check whether the stack is full
 
         Node *new_top = new Node;
         new_top->next = q->top;
@@ -55,8 +53,8 @@ namespace S {
         return 0;
     }
 
-    char get_top(stack *q, Node &out){
-        if(is_empty(q)) return 2;
+    char get_top(stack *q, Node &out){ // Return top element and remove it from stack
+        if(is_empty(q)) return 2; // Check whether the stack is empty
 
         out = *(q->top);
 
@@ -69,7 +67,7 @@ namespace S {
         return 0;
     }
 
-    void print_stack(stack *q){
+    void print_stack(stack *q){ // Consistent print of the stack
         Node *buff = q->top;
 
         std::cout << "\n top: ";
@@ -88,6 +86,7 @@ int main(){
     int mode, val;
     S::Node buff;
 
+    // Gain user input -> mode and execute that mode
     std::cout << "Enter the mode(1 - insert, 2 - get top, 3 - exit): ";
     while(scanf("%d", &mode) > 0 && mode != 3){
         if(mode == 1){
