@@ -1,5 +1,7 @@
 #include <iostream>
 
+#define STACK_CAP 5
+
 namespace S {
     typedef struct Node {
         int data;
@@ -81,14 +83,14 @@ namespace S {
 
 int main(){
 
-    S::stack* stack = S::create(5);
+    S::stack* stack = S::create(STACK_CAP);
 
     int mode, val;
     S::Node buff;
 
     // Gain user input -> mode and execute that mode
-    std::cout << "Enter the mode(1 - insert, 2 - get top, 3 - exit): ";
-    while(scanf("%d", &mode) > 0 && mode != 3){
+    std::cout << "Enter the mode(1 - insert, 2 - get top, 3 - is empty, 4 - free and create new, 5 - exit): ";
+    while(scanf("%d", &mode) > 0 && mode != 5){
         if(mode == 1){
             std::cout << "Enter the data of a node: ";
             scanf("%d", &val);
@@ -99,9 +101,14 @@ int main(){
             } else {
                 std::cout << "top value: " << buff.data << '\n';
             }
+        } else if(mode == 3 && S::is_empty(stack)){
+            std::cout << "Stack is empty!\n";
+        } else if(mode == 4){
+            S::free(stack);
+            stack = S::create(STACK_CAP);
         }
         S::print_stack(stack);
-        std::cout << "\nEnter the mode(1 - insert, 2 - get top, 3 - exit): ";
+        std::cout << "\nEnter the mode(1 - insert, 2 - get top, 3 - is empty, 4 - free and create new, 5 - exit): ";
     }
 
     S::free(stack);
