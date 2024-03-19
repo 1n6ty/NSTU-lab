@@ -57,13 +57,8 @@ struct Queue {
         }  
         return value;  
     }  
-  
-    void printQueue() {  
-        if (isEmpty()) {  
-            std::cout << "The queue is empty!\n";//Очередь пуста!  
-        }  
-        else {  
-            std::cout << "Items in the queue:";//Элементы в очереди:  
+    void printQueue() { 
+        std::cout << "Items in the queue:";//Элементы в очереди:  
             if (end < beg)  
                 for (int i = 0; i < N; i++) {  
                     std::cout << " " << data[i];  
@@ -73,7 +68,15 @@ struct Queue {
                 std::cout << " " << data[i];  
                 if (i == end) break;  
             }  
-            std::cout << std::endl;  
+            std::cout << std::endl; 
+    }
+    void emptyQueue() {  
+        if (isEmpty()) {  
+            std::cout << "The queue is empty!\n";//Очередь пуста!  
+        }  
+        else {  
+            std::cout << "The queue is not empty.";//Очередь не пуста!
+            printQueue();
         }  
     }  
 };  
@@ -115,15 +118,17 @@ int main() {
             std::cout << "The queue has been successfully cleared\n";//Очередь успешно очищена  
             break;  
         case 2:  
-            queue.printQueue();  
+            queue.emptyQueue();  
             break;  
         case 3:  
             std::cout << "Enter the value to add:";//Введите значение для добавления:    
             std::cin >> value;  
             queue.enqueue(value);  
+            queue.printQueue();
             break;  
         case 4:  
-            std::cout << "The item was taken from the queue:" << queue.dequeue() << std::endl;//Взят элемент из очереди:   
+            std::cout << "The item was taken from the queue:" << queue.dequeue() << std::endl;//Взят элемент из очереди:  
+            queue.printQueue(); 
             break;  
         case 0:  
             std::cout << "Exiting the program\n";//Выход из программы  
