@@ -13,13 +13,6 @@ struct Queue { //структура очереди
 };
 
 void initQueue(Queue& q, int capacity) { //создание очереди нулевой длины/очистка очереди
-    // Node* current = q.front;
-    // while (current != nullptr) {
-    //     Node* temp = current;
-    //     current = current->next;
-    //     delete temp;
-    // }
-
     q.front = nullptr;
     q.rear = nullptr;
     q.size = 0;
