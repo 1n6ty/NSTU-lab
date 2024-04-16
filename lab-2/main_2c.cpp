@@ -75,7 +75,7 @@ namespace S {
         std::cout << "\n top: ";
         for(int i = 0; i < q->n; i++){
             std::cout << buff->data << " -> ";
-            buff = q->top->next;
+            buff = buff->next;
         }
         std::cout << "NULL";
     }

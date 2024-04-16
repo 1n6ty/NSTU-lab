@@ -1,11 +1,12 @@
 #include <iostream>
+#include <vector>
 #include <string.h>
 
 #define STACK_CAP 100
 
 namespace S {
     typedef struct Node {
-        int data;
+        char data;
         Node *next;
     } Node;
 
@@ -43,7 +44,7 @@ namespace S {
         return q->n == 0;
     }
 
-    char insert(stack *q, int data){ // Insert new node with data at the top of the stack
+    char insert(stack *q, char data){ // Insert new node with data at the top of the stack
         if(q->n + 1 > q->max_e) return 1; // Check whether the stack is full
 
         Node *new_top = new Node;
@@ -76,13 +77,13 @@ namespace S {
         std::cout << "\n top: ";
         for(int i = 0; i < q->n; i++){
             std::cout << buff->data << " -> ";
-            buff = q->top->next;
+            buff = buff->next;
         }
         std::cout << "NULL";
     }
 };
 
-void parse_eq(S::stack *stack, char *eq, int fst, int lst){
+void parse_eq(S::stack *stack, char *eq, int fst, int lst, char B){
     if(eq[fst] == '(' && eq[lst] == ')'){
         fst ++;
         lst --;
@@ -90,8 +91,8 @@ void parse_eq(S::stack *stack, char *eq, int fst, int lst){
     if(fst > lst){
         return;
     } else if(fst == lst){
-        S::insert(stack, eq[fst]);
-        S::print_stack(stack);
+        if(eq[fst] == 'B') S::insert(stack, B);
+        else S::insert(stack, eq[fst]);
         return;
     }
 
@@ -103,32 +104,66 @@ void parse_eq(S::stack *stack, char *eq, int fst, int lst){
             br_c --;
         } else if((eq[i] == '!' || eq[i] == '|' || eq[i] == '&') && br_c == 0){
             S::insert(stack, eq[i]);
-            S::print_stack(stack);
-            parse_eq(stack, eq, fst, i - 1);
-            parse_eq(stack, eq, i + 1, lst);
+            if(i + 1 == lst){
+                parse_eq(stack, eq, i + 1, lst, B);
+                parse_eq(stack, eq, fst, i - 1, B);
+            } else {
+                parse_eq(stack, eq, fst, i - 1, B);
+                parse_eq(stack, eq, i + 1, lst, B);
+            }
             break;
         }
+    }
+}
+
+char is_op(char op){
+    return (op == '|' || op == '&' || op == '!');
+}
+
+char operate(std::vector<char> arr, char op, char ch){
+    if(op == '|'){
+        return ((*(arr.rbegin()) - '0') | (*(arr.rbegin() + 1) - '0')) + '0';
+    } else if(op == '&'){
+        return ((*(arr.rbegin()) - '0') & (*(arr.rbegin() + 1) - '0')) + '0';
+    } else if(op == '!'){
+        return (!(*(arr.rbegin()) - '0')) + '0';
+    } else {
+        return 0;
     }
 }
 
 int main(){
 
     S::stack* stack = S::create(STACK_CAP);
-    FILE *inp = fopen("inp", "r");
-
-    S::insert(stack, 1);
-    S::insert(stack, 2);
-    S::insert(stack, 3);
-    S::insert(stack, 4);
-    S::print_stack(stack);
+    FILE *inp = fopen("lab-2/inp", "r");
 
     char eq[] = "((!(B|(B&0)))&B)", B;
-    fscanf(inp, "%c", B);
+    fscanf(inp, "%c", &B);
 
-    parse_eq(stack, eq, 0, strlen(eq) - 1);
+    parse_eq(stack, eq, 0, strlen(eq) - 1, B);
     S::print_stack(stack);
+
+    char step;
+    S::Node buff;
+    std::vector<char> arr;
+    while(!S::is_empty(stack)){
+        if(S::get_top(stack, buff) == 2) break;
+        if(is_op(buff.data)){
+            step = operate(arr, buff.data, B);
+            arr.erase(arr.end() - std::min(2, (int) arr.size()), arr.end());
+            arr.push_back(step);
+            for(auto it = arr.rbegin(); it != arr.rend(); it++) S::insert(stack, *it);
+            S::print_stack(stack);
+            arr = std::vector<char>();
+        } else {
+            arr.push_back(buff.data);
+        }
+    }
 
     fclose(inp);
     S::free(stack);
+
+    std::cout << '\n' << buff.data << " - answer" << '\n';
+
     return 0;
 }
