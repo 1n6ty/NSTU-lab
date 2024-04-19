@@ -1,7 +1,8 @@
-def is_prime(n):
-    for i in range(2, int(n**0.5)+1):
-        if n % i == 0: return False
-    return True
+def is_prime(n, d=2):
+    if d < int(n**0.5) + 1:
+        return (n % d == 1) and is_prime(n, d + 1)
+    else:
+        return True
 
 n = int(input("Введите натуральное число больше 1: "))
 
