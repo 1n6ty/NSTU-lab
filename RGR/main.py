@@ -26,7 +26,7 @@ def print_destination_tree(start_label: np.ndarray, network: dict, transitions: 
             print_destination_tree(start_label - cur_label + out_label * cur_label_max, network, transitions, points, steps, cur_step + 1, trans)
 
 # Reading Petri network
-with open('graph.json', 'r') as f:
+with open('.\RGR\graph.json', 'r') as f:
     petri = json.load(f)
 
 # Some Global variables
