@@ -1,7 +1,25 @@
 import json # To read json file of Petri network
 import numpy as np # To manipulate matrixes
 
-def print_destination_tree(start_label: np.ndarray, network: dict, transitions: list, points: list, steps: int, cur_step = 0, cur_trans = ''):
+def get_destination_matrix(network: dict, transitions: list, points: list):
+    dest = np.zeros((points_len, points_len), dtype=np.int32)
+
+    # Fill destination matrix
+    for trans in transitions:
+        for inp_ind in [points.index(i[0]) for i in network[trans]["inp"]]:
+            for out_ind in [points.index(i[0]) for i in network[trans]["out"]]:
+                dest[inp_ind, out_ind] = 1
+    
+    return dest
+
+def is_vital(network: dict, transitions: list):
+    for trans in transitions:
+        if not len([points.index(i[0]) for i in network[trans]["inp"]]):
+            return False
+    
+    return True
+
+def print_destination_tree(start_label: np.ndarray, D: np.ndarray, network: dict, transitions: list, points: list, steps: int, cur_step = 0, cur_trans = ''):
     if cur_step >= steps:
         return
 
@@ -9,21 +27,11 @@ def print_destination_tree(start_label: np.ndarray, network: dict, transitions: 
         print('|' * (cur_step - 1) + '∟', end='')
     print(cur_trans, start_label, sep='')
 
-    points_to, labels_in = [l for l_ind, l in enumerate(points) if start_label[l_ind] != 0], [l for l in start_label if l != 0]
-    for trans in transitions:
-        cur_label = np.zeros(len(points), dtype=np.int32)
-        for i in network[trans]["inp"]: # Count every transition entry if it is in start_label 
-            if i[0] in points_to:
-                i_ind = points_to.index(i[0])
-                cur_label += np.array([(labels_in[i_ind] if i[0] == j else 0) for j in points], dtype=np.int32)
-
-        cur_label_max = np.max(cur_label)
-        if cur_label_max > 0:
-            out_label = np.zeros(len(points), dtype=np.int32) # Count every transition out
-            for out in network[trans]["out"]:
-                out_label += np.array([int(out[0] == j) for j in points], dtype=np.int32)
-            # Recursively print out-labels 
-            print_destination_tree(start_label - cur_label + out_label * cur_label_max, network, transitions, points, steps, cur_step + 1, trans)
+    points_to = set([l for l_ind, l in enumerate(points) if start_label[l_ind] != 0])
+    for trans_ind, trans in enumerate(transitions):
+        new_label = start_label + D[trans_ind]
+        if all(new_label >= 0) and len(network[trans]["inp"]) > 0 and set([i[0] for i in network[trans]["inp"]]).issubset(points_to):
+            print_destination_tree(new_label, D, network, transitions, points, steps, cur_step + 1, trans)
 
 # Reading Petri network
 with open('graph.json', 'r') as f:
@@ -36,10 +44,10 @@ transitions = petri["transitions"]
 points_len, transitions_len = len(points), len(transitions)
 
 tree_steps_c = 5
-start_tree_label = [1, 0, 0, 0, 0]
+start_tree_label = [1, 1, 0, 0, 0]
 
-# Task 1: Destination matrix
-# Fill destination matrixes
+# Task 1: Change matrix
+# Fill part's matrixes
 D_minus, D_plus = np.zeros((transitions_len, points_len), dtype=np.int32), np.zeros((transitions_len, points_len), dtype=np.int32)
 
 for trans_ind, trans in enumerate(transitions):
@@ -52,14 +60,24 @@ for trans_ind, trans in enumerate(transitions):
         point_ind = points.index(point[0])
         D_plus[trans_ind, point_ind] = 1
 
-# Print Destination matrix
-print('D+:\n', D_plus)
-print('D-:\n', D_minus)
-print('D:\n', D_plus - D_minus)
+# Print Change matrix
+D = D_plus - D_minus
+
+print('D+:\n', D_plus, sep='')
+print('D-:\n', D_minus, sep='')
+print('D:\n', D, sep='')
 
 # Task 2: Destination tree
 # Print destianation tree for every label
 start_tree_label = np.array(start_tree_label, dtype=np.int32)
 
 print(f"Destination tree of steps: {tree_steps_c}:")
-print_destination_tree(start_tree_label, petri["network"], transitions, points, tree_steps_c)
+print_destination_tree(start_tree_label, D, petri["network"], transitions, points, tree_steps_c)
+
+# Task 3: analysis
+# Destination matrix
+dest = get_destination_matrix(petri["network"], transitions, points)
+print("Destination matrix:\n", dest, sep='')
+
+# Vitality
+print("Vitality: ", is_vital(petri["network"], transitions), sep='')
