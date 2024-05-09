@@ -23,7 +23,7 @@ def print_destination_tree(start_label: np.ndarray, network: dict, transitions: 
             for out in network[trans]["out"]:
                 out_label += np.array([int(out[0] == j) for j in points], dtype=np.int32)
             # Recursively print out-labels 
-            print_destination_tree(start_label - cur_label + out_label * cur_label_sum, network, transitions, points, steps, cur_step + 1, trans)
+            print_destination_tree(start_label - cur_label + out_label * cur_label_max, network, transitions, points, steps, cur_step + 1, trans)
 
 # Reading Petri network
 with open('graph.json', 'r') as f:
