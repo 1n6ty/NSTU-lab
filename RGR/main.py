@@ -17,8 +17,8 @@ def print_destination_tree(start_label: np.ndarray, network: dict, transitions: 
                 i_ind = points_to.index(i[0])
                 cur_label += np.array([(labels_in[i_ind] if i[0] == j else 0) for j in points], dtype=np.int32)
 
-        cur_label_sum = np.sum(cur_label)
-        if cur_label_sum > 0:
+        cur_label_max = np.max(cur_label)
+        if cur_label_max > 0:
             out_label = np.zeros(len(points), dtype=np.int32) # Count every transition out
             for out in network[trans]["out"]:
                 out_label += np.array([int(out[0] == j) for j in points], dtype=np.int32)
