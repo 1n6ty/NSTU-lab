@@ -3,12 +3,28 @@ import numpy as np # To manipulate matrixes
 
 def get_destination_matrix(network: dict, transitions: list, points: list):
     dest = np.zeros((points_len, points_len), dtype=np.int32)
-
+    
+    def fill(path):
+        point_from = path[-1]
+        points_to = []
+        for trans in transitions:
+            if point_from in [points.index(i[0]) for i in network[trans]["inp"]]:
+                points_to = [*points_to, *[points.index(i[0]) for i in network[trans]["out"]]]
+    
+        points_to = [i for i in list(set(points_to)) if not (i in path)]
+        
+        if len(points_to) == 0:
+            for i in range(len(path)):
+                for j in range(i, len(path)):
+                    dest[path[i], path[j]] = 1
+        else:
+            for p in points_to:
+                fill([*path, p])
+                    
     # Fill destination matrix
-    for trans in transitions:
-        for inp_ind in [points.index(i[0]) for i in network[trans]["inp"]]:
-            for out_ind in [points.index(i[0]) for i in network[trans]["out"]]:
-                dest[inp_ind, out_ind] = 1
+
+    for i in range(len(points)):
+        fill([i])
     
     return dest
 
