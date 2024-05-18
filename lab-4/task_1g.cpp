@@ -100,7 +100,8 @@ void insertElement(AVLNode*& root) {
     std::cin >> key;
 
     if (key.size() > 15){
-        
+        std::cout << "Enter invalid key.\n";
+        return;
     }
 
     std::cout << "Enter element value: ";
