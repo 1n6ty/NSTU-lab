@@ -54,6 +54,7 @@ AVLNode* rotateLeft(AVLNode* x) {
 
 AVLNode* insertNode(AVLNode* root, std::string key, double value) {
     if (root == nullptr) {
+        std::cout << "The element was successfully inserted into the table.\n";
         return new AVLNode(key, value);
     }
 
@@ -98,15 +99,15 @@ void insertElement(AVLNode*& root) {
     std::cout << "Enter element key (no more than 15 characters): ";
     std::cin >> key;
 
+    if (key.size() > 15){
+        std::cout << "Enter invalid key.\n";
+        return;
+    }
+
     std::cout << "Enter element value: ";
     std::cin >> value;
 
-    AVLNode* newRoot = insertNode(root, key, value);
-
-    if (newRoot != root) {
-        root = newRoot;
-        std::cout << "The element was successfully inserted into the table." << std::endl;
-    }
+    root = insertNode(root, key, value);
 }
 
 int main() {
