@@ -104,6 +104,17 @@ int main(){
 
     TableItem *item;
 
+    // Start reading file
+    FILE *table_txt = fopen("table.txt", "r");
+    if(!table_txt){
+        std::cout << "File error\n";
+    } else {
+        while(fscanf(table_txt, "%u %f", &uint_buff, &f_buff) != EOF){
+            table->insert(uint_buff, f_buff);
+        }
+    }
+    fclose(table_txt);
+
     while(1){
         std::cout << "Enter 1 - to insert, 2 - to get, 3 - to delete, 4 - to search for element by fvalue, 5 - to exit\n";
         std::cin >> inp_buff;
@@ -119,8 +130,8 @@ int main(){
             std::cin >> uint_buff;
 
             item = table->get(uint_buff);
-            if(item != NULL) printf("%u: %f", item->key, item->f_data);
-            else printf("%s", "NULL");
+            if(item != NULL) printf("%u: %f\n", item->key, item->f_data);
+            else printf("%s\n", "NULL");
             
         } else if(inp_buff == '3'){
             std::cout << "Enter key:\n";
