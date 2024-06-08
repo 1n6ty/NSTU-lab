@@ -1,28 +1,39 @@
 #include <iostream>
 #include <string>
+#include <vector>
+#include <list>
 
 struct Element {
     std::string key;
     double value;
 };
 
-void insertionSort(Element arr[], int n, int& comparisons, int& moves) {
-    
-    for (int i = 1; i < n; ++i) {
-        Element temp = arr[i];
-        int j = i - 1;
-
-        while (j >= 0 && arr[j].key > temp.key) {
+void bubbleSort(Element arr[], int n, int& comparisons, int& swaps) {
+    for (int i = 0; i < n - 1; i++) {
+        bool swapped = false;
+        for (int j = 0; j < n - i - 1; j++) {
             comparisons++;
-            arr[j + 1] = arr[j];
-            moves++;
-            j--;
+            if (arr[j].key > arr[j + 1].key) {
+                Element temp = arr[j];
+                arr[j] = arr[j + 1];
+                arr[j + 1] = temp;
+                swaps++;
+                swapped = true;
+            }
         }
-
-        comparisons++;
-        arr[j + 1] = temp;
-        moves++;
+        if (!swapped) {
+            break;
+        }
     }
+}
+
+bool hasKey(const Element arr[], int n, const std::string& key) {
+    for (int i = 0; i < n; ++i) {
+        if (arr[i].key == key) {
+            return true;
+        }
+    }
+    return false;
 }
 
 int main() {
@@ -31,22 +42,31 @@ int main() {
     std::cin >> n;
 
     Element table[n];
-
+    std::vector<std::list<Element>> hashTable(n); 
 
     for (int i = 0; i < n; ++i) {
-        std::cout << "Enter element key(no more than 15 characters): ";
+        std::cout << "Enter element key (no more than 15 characters): ";
         std::cin >> table[i].key;
-        if(table[i].key.size() > 15){
-            std::cout << "\nEnter invalid key.\n";
+        
+        if (table[i].key.size() > 15) {
+            std::cout << "Invalid key length. Please enter a key with at most 15 characters." << std::endl;
             return 0;
         }
-        std::cout << "Enter element: ";
+
+        std::cout << "Enter element value: ";
         std::cin >> table[i].value;
     }
 
     int comparisons = 0;
     int moves = 0;
-    insertionSort(table, n, comparisons, moves);
+
+    for (int i = 0; i < n; i++) {
+            int hash = std::hash<std::string>{}(table[i].key) % n; 
+            hashTable[hash].push_back(table[i]); 
+        }
+
+
+    bubbleSort(table, n, comparisons, moves);
 
     std::cout << "\nSorted table:\n";
     for (int i = 0; i < n; ++i) {
