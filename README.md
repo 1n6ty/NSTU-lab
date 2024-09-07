@@ -1,1 +1,2 @@
-# NSTU-lab
+# mpiaa
+MPiAA course 
