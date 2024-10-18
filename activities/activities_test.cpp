@@ -67,3 +67,49 @@ TEST_CASE( "Big one", "[activity]" ) {
     CHECK( (answer == to_set({ {1, 4}, {5, 7}, {8, 12}, {12, 16} }) ||
               answer == to_set({ {3, 5}, {5, 7}, {8, 12}, {12, 16}})) );
 }
+
+
+TEST_CASE( "Empty (brute)", "[activity]" ) {
+    CHECK( to_set(get_max_activities_brute({})) == to_set({}) );
+}
+
+TEST_CASE( "One activity (brute)", "[activity]" ) {
+    CHECK( to_set(get_max_activities_brute({ {2, 3} })) == to_set({ {2, 3} }) );
+}
+
+TEST_CASE( "Two compatibles (brute)", "[activity]" ) {
+    CHECK( to_set(get_max_activities_brute({ {3, 4}, {2, 3} })) == to_set({ {2, 3}, {3, 4} }) );
+}
+
+TEST_CASE( "Two overlaps (brute)", "[activity]" ) {
+    const auto answer = to_set(get_max_activities_brute({ {2, 5}, {3, 4} }));
+    CHECK( (answer == to_set({ {2, 5} }) || answer == to_set({ {3, 4} })) );
+}
+
+TEST_CASE( "Two incompatibles (brute)", "[activity]" ) {
+    const auto answer = to_set(get_max_activities_brute({ {3, 6}, {2, 5} }));
+    CHECK( (answer == to_set({ {2, 5} }) || answer == to_set({ {3, 6} })) );
+}
+
+TEST_CASE( "Three activities (brute)", "[activity]" ) {
+    const auto answer = to_set(get_max_activities_brute({ {2, 6}, {1, 4}, {5, 8} }));
+    CHECK( answer == to_set({ {1, 4}, {5, 8} }) );
+}
+
+TEST_CASE( "Four activities (brute)", "[activity]" ) {
+    const auto answer = to_set(get_max_activities_brute({ {2, 6}, {1, 4}, {7, 10}, {5, 8} }));
+    CHECK( (answer == to_set({ {1, 4}, {5, 8} }) || answer == to_set({ {2, 6}, {7, 10} })) );
+}
+
+TEST_CASE( "Five activities (brute)", "[activity]" ) {
+    const auto answer = to_set(get_max_activities_brute({ {2, 6}, {1, 4}, {7, 10}, {5, 8}, {9, 12} }));
+    CHECK( answer == to_set({ {1, 4}, {5, 8}, {9, 12} }) );
+}
+
+TEST_CASE( "Big one (brute)", "[activity]" ) {
+    const auto answer = to_set(get_max_activities_brute({ {3, 5}, {1, 4}, {5, 7}, {0, 6},
+                                                    {3, 9}, {5, 9}, {6, 11}, {4, 10},
+                                                    {8, 12}, {2, 14}, {12, 16} }));
+    CHECK( (answer == to_set({ {1, 4}, {5, 7}, {8, 12}, {12, 16} }) ||
+              answer == to_set({ {3, 5}, {5, 7}, {8, 12}, {12, 16}})) );
+}
