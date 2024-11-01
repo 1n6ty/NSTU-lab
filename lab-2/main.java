@@ -1,11 +1,10 @@
 import java.util.Scanner;
 
-public class main {
+public class Main {
 
     // 1) Перевести заданное число в двоично-десятичный код
     public static String toBinaryDecimal(int number) {
         StringBuilder bcd = new StringBuilder();
-
         while (number > 0) {
             int digit = number % 10;
             bcd.insert(0, String.format("%04d", Integer.parseInt(Integer.toBinaryString(digit))));
@@ -17,7 +16,6 @@ public class main {
     // 2) Расшифровать число из заданного двоично-десятичного кода
     private static int fromBinaryDecimal(String bcd) {
         int decimal = 0;
-
         for (int i = 0; i < bcd.length(); i += 4) {
             if (i + 4 > bcd.length()) {
                 throw new IllegalArgumentException("Недостаточно бит для последней цифры BCD");
@@ -29,67 +27,120 @@ public class main {
         return decimal;
     }
 
-    public static byte[] doubleToHex(double number) {
-        long bits = Double.doubleToLongBits(number);
-        return new byte[] {
-            (byte) (bits >> 56),
-            (byte) (bits >> 48),
-            (byte) (bits >> 40),
-            (byte) (bits >> 32),
-            (byte) (bits >> 24),
-            (byte) (bits >> 16),
-            (byte) (bits >> 8),
-            (byte) bits
-        };
-    }
-
-    public static byte[] floatToHex(float number) {
-        int bits = Float.floatToIntBits(number);
-        return new byte[] {
-            (byte) (bits >> 24),
-            (byte) (bits >> 16),
-            (byte) (bits >> 8),
-            (byte) bits
-        };
-    }
-
-    public static void printHex(byte[] hex) {
-        for (byte b : hex) {
-            System.out.printf("%02X", b);
-        }
-        System.out.println();
-    }
-
-    public static double hexToDouble(String hex) {
+    // Преобразование числа с плавающей запятой в восьмибайтное представление
+    public static String doubleToHex(double number) {
         long bits = 0;
-        for (int i = 0; i < hex.length(); i++) {
-            char hexChar = hex.charAt(i);
-            int hexValue = hexToDecimal(hexChar);
-            bits = (bits << 4) | hexValue; // сдвигаем влево и добавляем новую цифру
+        long sign = (number < 0) ? 1 : 0;
+        if (number < 0) number = -number;
+
+        int exponent = 0;
+        while (number >= 2.0) {
+            number /= 2.0;
+            exponent++;
         }
-        return Double.longBitsToDouble(bits);
+        while (number < 1.0) {
+            number *= 2.0;
+            exponent--;
+        }
+        
+        exponent += 1023;
+
+        // Получение мантиссы
+        number -= 1.0;
+        long mantissa = 0;
+        for (int i = 0; i < 52; i++) {
+            number *= 2;
+            if (number >= 1.0) {
+                mantissa |= 1L << (51 - i);
+                number -= 1.0;
+            }
+        }
+
+        // Формируем биты
+        bits |= (sign << 63);
+        bits |= ((long) exponent << 52);
+        bits |= mantissa;
+
+        return String.format("%016X", bits);
     }
 
-    public static float hexToFloat(String hex) {
+    // Преобразование числа с плавающей запятой в четырёхбайтное представление
+    public static String floatToHex(float number) {
         int bits = 0;
-        for (int i = 0; i < hex.length(); i++) {
-            char hexChar = hex.charAt(i);
-            int hexValue = hexToDecimal(hexChar);
-            bits = (bits << 4) | hexValue; // сдвигаем влево и добавляем новую цифру
+        int sign = (number < 0) ? 1 : 0;
+        if (number < 0) number = -number;
+
+        int exponent = 0;
+        while (number >= 2.0) {
+            number /= 2.0;
+            exponent++;
         }
-        return Float.intBitsToFloat(bits);
+        while (number < 1.0) {
+            number *= 2.0;
+            exponent--;
+        }
+
+        exponent += 127;
+
+        // Получение мантиссы
+        number -= 1.0;
+        int mantissa = 0;
+        for (int i = 0; i < 23; i++) {
+            number *= 2;
+            if (number >= 1.0) {
+                mantissa |= 1 << (22 - i);
+                number -= 1.0;
+            }
+        }
+
+        // Формируем биты
+        bits |= (sign << 31);
+        bits |= (exponent << 23);
+        bits |= mantissa;
+
+        return String.format("%08X", bits);
     }
 
-    private static int hexToDecimal(char hexChar) {
-        if (hexChar >= '0' && hexChar <= '9') {
-            return hexChar - '0';
-        } else if (hexChar >= 'A' && hexChar <= 'F') {
-            return hexChar - 'A' + 10;
-        } else if (hexChar >= 'a' && hexChar <= 'f') {
-            return hexChar - 'a' + 10;
-        } else {
-            throw new IllegalArgumentException("Недопустимый шестнадцатеричный символ: " + hexChar);
+    // Декодирование шестнадцатеричного представления в число double
+    public static double hexToDouble(String hex) {
+        long bits = Long.parseLong(hex, 16);
+        long sign = (bits >> 63) & 1;
+        int exponent = (int)((bits >> 52) & 0x7FF);
+        long mantissa = bits & 0xFFFFFFFFFFFFFL;
+
+        if (exponent == 0 && mantissa == 0) return 0.0; // 0.0
+        if (exponent == 0x7FF) return (mantissa == 0) ? (sign == 0 ? Double.POSITIVE_INFINITY : Double.NEGATIVE_INFINITY) : Double.NaN; // inf/nan
+
+        exponent -= 1023;
+        double value = 1.0;
+        for (int i = 51; i >= 0; i--) {
+            if ((mantissa & (1L << i)) != 0) {
+                value += Math.pow(2, i - 52);
+            }
         }
+        value *= Math.pow(2, exponent);
+        return (sign == 0) ? value : -value;
+    }
+
+    // Декодирование шестнадцатеричного представления в число float
+    public static float hexToFloat(String hex) {
+        int bits = Integer.parseInt(hex, 16);
+        int sign = (bits >> 31) & 1;
+        int exponent = (bits >> 23) & 0xFF;
+        int mantissa = bits & 0x7FFFFF;
+
+        if (exponent == 0 && mantissa == 0) return 0.0f; // 0.0
+        if (exponent == 0xFF) return (mantissa == 0) ? (sign == 0 ? Float.POSITIVE_INFINITY : Float.NEGATIVE_INFINITY) : Float.NaN; // inf/nan
+
+        exponent -= 127;
+        float value = 1.0f;
+        for (int i = 22; i >= 0; i--) {
+            if ((mantissa & (1 << i)) != 0) {
+                value += Math.pow(2, i - 23);
+            }
+        }
+        value *= Math.pow(2, exponent);
+        return (sign == 0) ? value : -value;
     }
 
     public static void main(String[] args) {
@@ -97,54 +148,48 @@ public class main {
         int choice;
         boolean loop = true;
 
-
         while (loop) {
-            System.out.println("Введите 1, если хотите перевечти число в двоично-десятичный код.");
+            System.out.println("Введите 1, если хотите перевести число в двоично-десятичный код.");
             System.out.println("Введите 2, если хотите декодировать двоично-десятичный код.");
-            System.out.println("Введите 3, если хотите преобразовать число с плавающей запятой в шестнадцатиричный код.");
-            System.out.println("Введите 4, если хотите декодировать шестнадцатиричный код.");
+            System.out.println("Введите 3, если хотите преобразовать число с плавающей запятой в шестнадцатеричное восьмибайтное представление (double).");
+            System.out.println("Введите 4, если хотите преобразовать число с плавающей запятой в шестнадцатеричное четырёхбайтное представление (float).");
+            System.out.println("Введите 5, если хотите декодировать шестнадцатеричный восьмибайтный код.");
+            System.out.println("Введите 6, если хотите декодировать шестнадцатеричный четырехбайтный код.");
             System.out.println("Если хотите завершить работу программы, введите 0.");
             choice = scanner.nextInt();
             if (choice == 0) {
                 loop = false;
-            }else if (choice == 1) {
+            } else if (choice == 1) {
                 System.out.println("Введите целое число для перевода в двоично-десятичный код:");
                 int number = scanner.nextInt();
                 System.out.println("Двоично-десятичный код: " + toBinaryDecimal(number));
-            }else if (choice == 2) {
+            } else if (choice == 2) {
                 System.out.println("Введите двоично-десятичный код для декодирования:");
                 String binaryInput = scanner.next();
-                try {
-                    System.out.println("Декодированное число: " + fromBinaryDecimal(binaryInput));
-                } catch (Exception e) {
-                    System.out.println("Ошибка: " + e.getMessage());
-                }
-            }else if (choice == 3) {
-                System.out.println("Введите число с плавающей запятой:");
+                System.out.println("Декодированное число: " + fromBinaryDecimal(binaryInput));
+            } else if (choice == 3) {
+                System.out.println("Введите число с плавающей запятой (double):");
                 double number = scanner.nextDouble();
-
-                byte[] eightByteHex = doubleToHex(number);
-                byte[] fourByteHex = floatToHex((float) number);
-
-                System.out.println(number);
-                System.out.print("Восьмибайтное: ");
-                printHex(eightByteHex);
-                System.out.print("Четырехбайтное: ");
-                printHex(fourByteHex);
-                System.out.println();
-            }else if (choice == 4) {
-                // Ввод восьмибайтного кода
+                String hexRepresentation = doubleToHex(number);
+                System.out.println("Шестнадцатеричное восьмибайтное представление: " + hexRepresentation);
+            } else if (choice == 4) {
+                System.out.println("Введите число с плавающей запятой (float):");
+                float number = scanner.nextFloat();
+                String hexRepresentation = floatToHex(number);
+                System.out.println("Шестнадцатеричное четырёхбайтное представление: " + hexRepresentation);
+            } else if (choice == 5) {
                 System.out.println("Введите шестнадцатеричный восьмибайтный код (например, C073600000000000): ");
                 String eightByteHex = scanner.next();
                 double convertedDouble = hexToDouble(eightByteHex);
                 System.out.println("Преобразованное число (double): " + convertedDouble);
-
-                // Ввод четырехбайтного кода
+            } else if (choice == 6) {
                 System.out.print("Введите шестнадцатеричный четырехбайтный код (например, C0AB6000): ");
                 String fourByteHex = scanner.next();
                 float convertedFloat = hexToFloat(fourByteHex);
                 System.out.println("Преобразованное число (float): " + convertedFloat);
-            }else System.out.println("Введено некорректное значение.");
+            } else {
+                System.out.println("Введено некорректное значение.");
+            }
         }
         scanner.close();
     }
