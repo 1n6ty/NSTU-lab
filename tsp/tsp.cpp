@@ -2,8 +2,31 @@
 #include <limits.h>
 #include <algorithm>
 #include <iostream>
+#include <vector>
+#include <random>
 
 using namespace std;
+
+std::vector<int> generate_random_path(const Graph &graph){
+    std::vector<int> vertices = graph.get_vertices(), new_path;
+    if(vertices.size() < 2) return std::vector<int>();
+
+    Graph graph_cpy = Graph(graph);
+
+    int start;
+    while(true){
+        start = vertices[rand() * (vertices.size() - 1) / RAND_MAX];
+
+        new_path.push_back(start);
+
+        vertices = graph_cpy.get_adjacent_vertices(start);
+        if(vertices.size() == 0) break;
+
+        graph_cpy.remove_vertex(start);
+    }
+    
+    return new_path;
+}
 
 double compute_path_length(const Graph &graph, const vector<int> &path){
     if(path.size() < 2) return __DBL_MAX__;
