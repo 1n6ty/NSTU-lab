@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>App</title>
+    <style>
+        td, table {
+            border: 1px solid black;
+            margin: 0;
+        }
+    </style>
+  </head>
+  <body>
+    <h1>Users</h1>
+    <table class="users">
+        <tr>
+            <td>login</td>
+            <td>lastname</td>
+            <td>name</td>
+            <td>patronymic</td>
+            <td>date of registration</td>
+            <td>date of last connection</td>
+            <td>status</td>
+        </tr>
+        <% for(let i of users){ %>
+            <tr>
+                <td><%= i.loginu %></td>
+                <td><%= i.lastname %></td>
+                <td><%= i.nameu %></td>
+                <td><%= i.patronymic %></td>
+                <td><%= i.dateofregistration %></td>
+                <td><%= i.datelastconnect %></td>
+                <td><%= i.statusu %></td>
+                <% if(i.editable) { %>
+                    <td><a href="javascript:editUser(<%= i.idu %>)">Edit</a><br/><a href="javascript:deleteUser(<%= i.idu %>)">Delete</a></td>
+                <% } %>
+            </tr>
+        <% } %>
+    </table>
+    <br/>
+    <h1 style="margin-bottom: 0;">Bots</h1>
+    <h2 style="margin-top: 0;"><a href="javascript:window.location=/addbot/+window.location.search;">Add bot</a></h2>
+    <table>
+        <tr>
+            <td>name</td>
+            <td>description</td>
+            <td>owner</td>
+            <td>date of registration</td>
+            <td>status</td>
+            <% for(let i of bots){ %>
+                <tr>
+                    <td><%= i.nameu %></td>
+                    <td><%= i.descriptionu %></td>
+                    <td><%= i.ownerlogin %></td>
+                    <td><%= i.dateofregistration %></td>
+                    <td><%= i.statusu %></td>
+                    <% if(i.editable) { %>
+                        <td><a href="javascript:deleteBot(<%= i.botid %>)">Delete</a></td>
+                    <% } %>
+                </tr>
+            <% } %>
+        </tr>
+    </table>
+    <script>
+        function deleteUser(id){
+            fetch("/deleteuser/" + window.location.search, {
+                method: "delete",
+                headers: {
+                    'Content-type': 'application/json; charset=UTF-8'
+                },
+                body: JSON.stringify({id: id})
+            }).then(
+                (res) => {
+                    window.location.reload(true);
+                }
+            ).catch((err) => {console.error(err)});
+        }
+
+        function deleteBot(id){
+            fetch("/deletebot/" + window.location.search, {
+                method: "delete",
+                headers: {
+                    'Content-type': 'application/json; charset=UTF-8'
+                },
+                body: JSON.stringify({id: id})
+            }).then(
+                (res) => {
+                    window.location.reload(true);
+                }
+            ).catch((err) => {console.error(err)});
+        }
+
+        function editUser(id){
+            window.location.replace(`/edituser/${window.location.search}&edit_id=${id}`);
+        }
+    </script>
+  </body>
+</html>
