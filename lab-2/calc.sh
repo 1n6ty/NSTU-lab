@@ -3,7 +3,7 @@
 PRECISION=2; # Precision of float number
 
 echo `date`; # Prints current date
-echo "PMI-33, Team - 1"; # Developers' info 
+echo "PMI-${1}, Team - ${2}"; # Developers' info 
 
 printf "Calculator:\n";
 
