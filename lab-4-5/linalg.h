@@ -22,17 +22,20 @@ namespace linalg{
     double dotProduct(const Vec& v1, const Vec& v2);
     double norm_2(const Vec &vec);
 
-    Mat matmul(Mat &input_1, Mat &input_2);
+    Mat matmul(const Mat &input_1, const Mat &input_2);
     Mat transpose(const Mat &A);
 
     void swap_rows(Mat &mat, size_t fst_ind, size_t sec_ind);
     void swap_cols(Mat &mat, size_t fst_ind, size_t sec_ind);
     void row_comb(Mat &mat, size_t from, size_t to, double coef);
 
+    Mat op_diag(Mat &A);
+
     Mat Gauss(Mat &A, Mat &f);
     Mat QR_dec(Mat &A, Mat &f);
 
     std::array<Mat, 2> _get_QR(Mat &A);
+    std::array<Mat, 3> get_SVD(Mat &A);
 }
 
 void printMatrix(std::ostream &stream, linalg::Mat &mat);

@@ -9,7 +9,7 @@
  * @param input_2 left matrix `m*k`
  * @return matrix `n*k`
 */
-linalg::Mat linalg::matmul(linalg::Mat &input_1, linalg::Mat &input_2){
+linalg::Mat linalg::matmul(const linalg::Mat &input_1, const linalg::Mat &input_2){
     size_t input_1_n = input_1.size(), input_2_m = input_2.size();
     if(input_1_n == 0 || input_2_m == 0){
         char buff[126];
@@ -335,4 +335,127 @@ linalg::Mat linalg::QR_dec(linalg::Mat &A, linalg::Mat &f){
  */
 double linalg::norm_2(const linalg::Vec &vec){
     return std::sqrt(dotProduct(vec, vec));
+}
+
+/**
+ * Method that computes Housholder orthogonalization on vector `(x_1, x_2, ..., x_r, ..., x_n) -> (x_1, x_2, ..., x_new_r, 0, ..., 0)`
+ * @param x initial vector
+ * @param r see description before
+ * @return Housholder matrix
+ */
+linalg::Mat Housholder_orthogonalization(linalg::Vec &x, size_t r){
+    size_t x_n = x.size();
+    linalg::Vec p = linalg::Vec(x.begin() + r, x.end());
+    p[0] -= ((-p[0] >= 0) ? 1: -1) * linalg::norm_2(p);
+    double norm_p = linalg::norm_2(p);
+    if(norm_p > 1e-15) for(auto it = p.begin(); it != p.end(); it++) *it /= norm_p;
+    else p = linalg::Vec(x_n - r, 0);
+
+    linalg::Mat H = linalg::Mat(x_n, linalg::Vec(x_n, 0));
+    for(size_t i = r; i < x_n; i++){
+        for(size_t j = r; j < x_n; j++){
+            H[i][j] = -2 * p[i - r] * p[j - r];
+        }    
+    }
+    for(size_t i = 0; i < x_n; i++) H[i][i] += 1;
+
+    return H;
+}
+
+/**
+ * Givens rotation algorithm
+ * @param A initial matrix
+ * @param i row of element that will be 0 after
+ * @param j column of element that will be 0 after
+ * @return rotation matrix
+ */
+linalg::Mat Givens(linalg::Mat &A, size_t i, size_t j){
+    double r, s, c;
+    size_t n = A.size();
+
+    linalg::Mat G = linalg::Mat(n, linalg::Vec(n, 0));
+    for(size_t i = 0; i < n; i++) G[i][i] = 1;
+
+    if(i > j){
+        r = std::sqrt(A[j][j] * A[j][j] + A[i][j] * A[i][j]);
+        s = A[i][j] / r, c = A[j][j] / r;
+
+        G[i][j] = -s;
+        G[j][i] = s;
+    } else {
+        r = std::sqrt(A[i][i] * A[i][i] + A[i][j] * A[i][j]);
+        s = -A[i][j] / r, c = A[i][i] / r;
+
+        G[i][j] = s;
+        G[j][i] = -s;
+    }
+
+    G[i][i] = G[j][j] = c;
+
+    return G;
+}
+
+#include <iostream>
+std::array<linalg::Mat, 3> linalg::get_SVD(linalg::Mat &A){
+    size_t A_n = A.size(), A_m = A[0].size();
+
+    std::array<linalg::Mat, 3> SVD = {linalg::Mat(A_n, linalg::Vec(A_n, 0)), A, linalg::Mat(A_m, linalg::Vec(A_m, 0))};
+    
+    for(size_t i = 0; i < A_m; i++) SVD[2][i][i] = 1;
+    for(size_t i = 0; i < A_n; i++) SVD[0][i][i] = 1;
+    
+    linalg::Mat h;
+    linalg::Vec x;
+    for(size_t i = 0; i < A_n - 1; i++){
+        x.clear();
+        for(size_t j = 0; j < A_n; j++) x.push_back(SVD[1][j][i]);
+
+        h = Housholder_orthogonalization(x, i);
+        h = linalg::transpose(h);
+        SVD[1] = linalg::matmul(h, SVD[1]);
+        SVD[0] = linalg::matmul(h, SVD[0]);
+
+        h = Housholder_orthogonalization(SVD[1][i], i + 1);
+        SVD[1] = linalg::matmul(SVD[1], h);
+        SVD[2] = linalg::matmul(SVD[2], h);
+    } 
+
+    linalg::Mat G;
+    double bs;
+    while(true){
+        for(size_t i = 0; i < A_n - 1; i++){
+            G = Givens(SVD[1], i, i + 1);
+            SVD[1] = linalg::matmul(SVD[1], G);
+            SVD[2] = linalg::matmul(SVD[2], G);
+        }
+        for(size_t i = 1; i < A_n; i++){
+            G = Givens(SVD[1], i, i - 1);
+            SVD[1] = linalg::matmul(G, SVD[1]);
+            SVD[0] = linalg::matmul(G, SVD[0]);
+        }
+
+        bs = 0;
+        for(size_t i = 0; i < A_n; i++){
+            if(i > 1){
+                bs += std::abs(SVD[1][i][i - 1]);
+            }
+            if(i < A_n - 1){
+                bs += std::abs(SVD[1][i][i + 1]);
+            }
+        }
+        if(bs < 1e-15) break;
+    }
+    SVD[0] = linalg::transpose(SVD[0]);
+    SVD[2] = linalg::transpose(SVD[2]);
+
+    return SVD;
+}
+
+linalg::Mat linalg::op_diag(linalg::Mat &A){
+    linalg::Mat A_cpy = linalg::Mat(A);
+    size_t n = A.size();
+    for(size_t i = 0; i < n; i++){
+        if(std::abs(A_cpy[i][i]) > 1e-15) A_cpy[i][i] = 1 / A_cpy[i][i];
+    }
+    return A_cpy;
 }
