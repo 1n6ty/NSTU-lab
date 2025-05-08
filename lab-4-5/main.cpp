@@ -10,10 +10,10 @@
  */
 linalg::Mat generate_mat(size_t N){
     linalg::Mat out;
-    for(size_t i = 0; i < N; i++){
+    for(size_t i = 1; i <= N; i++){
         out.push_back(linalg::Vec());
-        for(size_t j = 0; j < N; j++){
-            out[i].push_back((i == j) ? 100: 2 + 0.01 * static_cast<double>(i) + 0.2 * static_cast<double>(j));
+        for(size_t j = 1; j <= N; j++){
+            out[i - 1].push_back((i == j) ? 100: 2 + 0.01 * static_cast<double>(i) + 0.2 * static_cast<double>(j));
         }
     }
     return out;
@@ -26,10 +26,10 @@ linalg::Mat generate_mat(size_t N){
  */
 linalg::Mat generate_mat2(size_t N){
     linalg::Mat out;
-    for(size_t i = 0; i < N; i++){
+    for(size_t i = 1; i <= N; i++){
         out.push_back(linalg::Vec());
-        for(size_t j = 0; j < N; j++){
-            out[i].push_back(1 / (1 + 0.8 * i + 2 * j));
+        for(size_t j = 1; j <= N; j++){
+            out[i - 1].push_back(1 / (1 + 0.8 * i + 2 * j));
         }
     }
     return out;
