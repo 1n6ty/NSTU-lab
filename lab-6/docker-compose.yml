@@ -1,0 +1,32 @@
+services:
+  db:
+    image: postgres:latest
+    env_file: .env
+    environment:
+      POSTGRES_USER: $DB_USER
+      POSTGRES_PASSWORD: $DB_PASSWORD
+      POSTGRES_DB: $DB_NAME
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./db:/var/lib/postgres
+      - ./db:/docker-entrypoint-initdb.d/
+    restart: always
+  app:
+    build: ./app
+    env_file:
+      - .env
+    environment:
+      DB_HOST: $DB_HOST
+      DB_NAME: $DB_NAME
+      DB_USER: $DB_USER
+      DB_PASSWORD: $DB_PASSWORD
+    ports:
+      - "80:80"
+    volumes: 
+      - ./app:/app
+      - /app/node_modules
+    links:
+      - db:db
+    depends_on:
+      - db
