@@ -3,3 +3,4 @@
 *.exe
 .vscode
 node_modules
+tmp
