@@ -1,96 +1,92 @@
-#pragma comment(lib, "ws2_32.lib") //динамическая библиотека ядра
-#include <WinSock2.h> //заголовочный файл, содержащий актуальные реализации 
-                      //функций для работы с сокетами
-#include <WS2tcpip.h> //заголовочный файл, который содержит различные программные интерфейсы, 
-                      //связанные с работой протокола TCP/IP 
-                      //(переводы различных данных в формат, понимаемый протоколом и т.д.)*/
+#include "Client.h"
+#include <stdio.h>
 #include <iostream>
 #include <stdio.h>
 #include <vector>
 #include <string>
+#include <cstring>  // для strlen
 
-int main(){
+Client::Client(const char* ip, unsigned short port) {
+    this->ip = ip;
+    this->port = port;
 
-    //Инициализация Winsock
-    WSADATA wsaData;
-    // Проверка, успешно ли инициализировалась WinSock
-    if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
-        std::cout << "WSAStartup failed\n";
-        return 1;
+    int res = WSAStartup(0x0101, &wsaData);
+    if (res != 0) {  // Исправлено: WSAStartup возвращает 0 при успехе
+        std::cout << "WSAStartup() failed: " << res << "\n";
+        return;
     }
 
-    //Создание сокета 
-    SOCKET clientSock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-    // Проверка, успешно ли создан сокет
-    if (clientSock == INVALID_SOCKET) {
-        std::cout << "Socket creation failed: " << WSAGetLastError() << "\n";
-        WSACleanup();
-        return 1;
+    // Получаем дескриптор сокета клиента.
+    clientSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+    if (clientSocket == INVALID_SOCKET) {  // Исправлено: SOCKET_ERROR -> INVALID_SOCKET
+        std::cout << "Failed to create client socket: " << WSAGetLastError() << "\n";
+        return;
     }
 
-    // Настройка адреса сервера
-    sockaddr_in servInfo;
-    servInfo.sin_family = AF_INET;
-    servInfo.sin_port = htons(2001);
-    
-    // Ввод IP-адреса сервера (Hamachi IP)
-    std::string serverIp;
-    std::cout << "Enter server Hamachi IP: ";
-    std::cin >> serverIp;
-    std::cin.ignore();  // Очистка буфера
-    
-    servInfo.sin_addr.s_addr = inet_addr(serverIp.c_str());
-    // Подключение к серверу
-   std::cout << "Connecting to " << serverIp << ":2001...\n";
-    
-    if (connect(clientSock, (sockaddr*)&servInfo, sizeof(servInfo)) == SOCKET_ERROR) {
+    // Заполняем информацию о сокете сервера.
+    serverSIN.sin_family = AF_INET;
+    serverSIN.sin_port = htons(port);
+    serverSIN.sin_addr.S_un.S_addr = inet_addr(ip); 
+
+    buf = (char*)malloc(BUF_SIZE);
+    if (buf == nullptr) {
+        std::cout << "Memory allocation failed\n";
+    }
+}
+
+Client::~Client() {
+    if (buf != nullptr) {
+        free(buf);
+    }
+}
+
+// Отправляем запрос серверу.
+void Client::sendRequest(){
+    // Подключаемся к серверу.
+    int res = connect(clientSocket, (LPSOCKADDR)&serverSIN, sizeof(serverSIN));
+    if (res == SOCKET_ERROR) {
         std::cout << "Connection failed: " << WSAGetLastError() << "\n";
         std::cout << "Make sure:\n";
         std::cout << "1. Server is running\n";
-        std::cout << "2. Hamachi is active on both computers\n";
-        std::cout << "3. Computers are in the same Hamachi network\n";
-        std::cout << "4. Firewall allows connections on port 2001\n";
-        closesocket(clientSock);
-        WSACleanup();
-        return 1;
+        std::cout << "2. Correct IP and port: " << ip << ":" << port << "\n";
+        std::cout << "3. Firewall allows connections\n";
+        return;
     }
+    std::cout << "Connected to server " << ip << ":" << port << " successfully!\n\n";
 
-    std::cout << "Successfully connected to server!\n\n";
-
-    // Ввод и отправка данных
-    std::string input;
+    // Ввод строки для обработки
     std::cout << "Enter text to process: ";
-    std::getline(std::cin, input);
+    std::cin.getline(buf, BUF_SIZE);
 
-    // Отправка данных серверу
-    int sendResult = send(clientSock, input.c_str(), input.length(), 0);
-    if (sendResult == SOCKET_ERROR) {
-        std::cout << "Send failed: " << WSAGetLastError() << "\n";
-        closesocket(clientSock);
-        WSACleanup();
-        return 1;
+    // Отправляем строку серверу
+    res = send(clientSocket, buf, strlen(buf), 0);
+    if (res == SOCKET_ERROR) {
+        std::cout << "Failed to send data: " << WSAGetLastError() << "\n";
+        return;
     }
+    std::cout << "Data sent to server.\n";
 
-    std::cout << "Data sent to server\n";
+    // Очищаем буфер для приема ответа
+    memset(buf, 0, BUF_SIZE);
 
-    // Получение ответа от сервера
-    char buffer[1024];
-    int bytesReceived = recv(clientSock, buffer, sizeof(buffer) - 1, 0);
-    
-    if (bytesReceived > 0) {
-        buffer[bytesReceived] = '\0';
-        std::cout << "\nServer response: " << buffer << "\n";
-    } else if (bytesReceived == 0) {
-        std::cout << "Server disconnected\n";
-    } else {
-        std::cout << "Recv failed: " << WSAGetLastError() << "\n";
+    // Получаем обработанную строку от сервера
+    res = recv(clientSocket, buf, BUF_SIZE - 1, 0);  // -1 для места под '\0'
+    if (res == SOCKET_ERROR) {
+        std::cout << "Server is not responding: " << WSAGetLastError() << "\n";
     }
+    else if (res == 0) {
+        std::cout << "Server closed connection\n";
+    }
+    else {
+        buf[res] = '\0';  // Добавляем завершающий ноль
+        std::cout << "Result: " << buf << "\n";
+    }
+}
 
-    // Завершение работы
-    closesocket(clientSock);
+void Client::close() {
+    if (clientSocket != INVALID_SOCKET) {
+        closesocket(clientSocket);
+    }
     WSACleanup();
-    
-    std::cout << "\nPress Enter to exit...";
-    std::cin.get();
-    return 0;
+    std::cout << "Client closed.\n";
 }

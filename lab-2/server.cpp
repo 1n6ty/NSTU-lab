@@ -1,134 +1,137 @@
-#pragma comment(lib, "ws2_32.lib") //динамическая библиотека ядра
-#include <WinSock2.h> //заголовочный файл, содержащий актуальные реализации 
-                      //функций для работы с сокетами
-#include <WS2tcpip.h> //заголовочный файл, который содержит различные программные интерфейсы, 
-                      //связанные с работой протокола TCP/IP 
-                      //(переводы различных данных в формат, понимаемый протоколом и т.д.)*/
-#include <iostream>
+#include "Server.h"
 #include <stdio.h>
-#include <vector>
+#include <string>
+#include <sstream>
+#include <cctype>
+#include <cstring>
+#include <iostream>
 
-int main(){
-  // Инициализация библиотеки WinSock (запрос версии 2.2)
-  WSADATA wsData;
-  int erStat = WSAStartup(MAKEWORD(2, 2), &wsData);
-  // Проверка, успешно ли инициализировалась WinSock
-  if ( erStat!= 0) {
-		std::cout << "Error WinSock version initializaion #";
-		std::cout << WSAGetLastError() << "\n"; // Вывод кода ошибки
-		return 1; // Завершение программы
-	} else std::cout << "WinSock initialized successfully!\n";
+Server::Server(unsigned short port) {
+    this->port = port;
 
-  // Создание сокета
-  // AF_INET -> используем IPv4
-  // SOCK_STREAM -> создаём потоковый сокет (TCP)
-  // 0 -> протокол по умолчанию (для TCP и UDP)
-  SOCKET ServSock = socket(AF_INET, SOCK_STREAM, 0);
-  // Проверка, успешно ли создан сокет
-  if (ServSock == INVALID_SOCKET){
-    std::cout << "Ettor initialization socket # " << WSAGetLastError() << "\n";
-    closesocket(ServSock); // Закрываем сокет (если он успел создаться)
-    WSACleanup(); // Освобождаем ресурсы WinSock
-    return 1;
-  } else std::cout << "Socket initialized successfully!\n";
-
-  // Настройка адреса сервера
-  sockaddr_in servInfo;
-  servInfo.sin_family = AF_INET;
-  servInfo.sin_addr.s_addr = INADDR_ANY;  // Принимать подключения со всех интерфейсов
-  servInfo.sin_port = htons(2001);  // Порт = номер бригады + 2000
-
-  //Привязка сокета и проверка, успешно ли он привязался
-  erStat = bind(ServSock, (sockaddr*)&servInfo, sizeof(servInfo));
-  if (erStat != 0) {
-    std::cout << "Error Socket binding to server info. Error # " << WSAGetLastError() << "\n";
-    closesocket(ServSock);
-    WSACleanup();
-  } else std::cout << "The socket was successfully bound!\n";
-
-  // Переводим сокет в режим прослушивания
-  erStat = listen(ServSock, 5);
-  // Проверка, удалось ли начать прослушивание
-  if( erStat != 0){
-		std::cout << "Can't start to listen to. Error # " << WSAGetLastError() << "\n";
-		closesocket(ServSock); 
-		WSACleanup();
-		return 1;
-  } else std::cout << "Server listening started successfully!\n";
-
-
-  // Получение и вывод IP-адресов сервера
-  char hostname[256];
-  gethostname(hostname, sizeof(hostname));
-  std::cout << "Server hostname: " << hostname << "\n";
-    
-  // Вывод всех IP-адресов
-  hostent* host = gethostbyname(hostname);
-  if (host != NULL) {
-      std::cout << "Available IP addresses:" << "\n";
-      for (int i = 0; host->h_addr_list[i] != 0; ++i) {
-          sockaddr_in addr;
-          memcpy(&addr.sin_addr, host->h_addr_list[i], host->h_length);
-          std::cout << " - " << inet_ntoa(addr.sin_addr) << "\n";
-      }
-  } else {
-      std::cout << "Cannot get host information" << "\n";
-  }
-    
-  std::cout << "Server started on port 2001\n";
-  std::cout << "Waiting for connections...\n";
-
-  while (true) {
-    // Принятие подключения
-    sockaddr_in clientAddr;
-    int clientSize = sizeof(clientAddr);
-    SOCKET clientSock = accept(ServSock, (sockaddr*)&clientAddr, &clientSize);
-        
-    if (clientSock == INVALID_SOCKET) {
-      std::cout << "Accept failed: " << WSAGetLastError() << "\n";
-      continue;
+    int res = WSAStartup(0x0101, &wsaData);
+    if (res != 0) {  // Исправлено: WSAStartup возвращает 0 при успехе
+        std::cout << "WSAStartup() failed: " << res << "\n";
+        Server::close();
+        return;  // Добавлено: предотвращение дальнейшего выполнения при ошибке
     }
+    
+    // Присваиваем сокету дескриптор.
+    serverSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+    if (serverSocket == INVALID_SOCKET) {  // Исправлено: SOCKET_ERROR -> INVALID_SOCKET
+        std::cout << "Failed to create server socket: " <<  WSAGetLastError()  << "\n";
+        Server::close();
+        return;
+    }
+    
+    // Заполняем структуру с информацией о сокете сервера.
+    serverSIN.sin_family = AF_INET;            // AF_INET определяет взаимодействие через интернет.
+    serverSIN.sin_port = htons(port);          // Записываем порт.
+    serverSIN.sin_addr.s_addr = INADDR_ANY;    // Привязываем сокет ко всем локальным IP.
 
-    std::cout << "\n=== New connection accepted ===\n";
-    std::cout << "Client IP: " << inet_ntoa(clientAddr.sin_addr) << "\n";
-    std::cout << "Client port: " << ntohs(clientAddr.sin_port) << "\n";
+    buf = (char*)malloc(BUF_SIZE);
+    if (buf == nullptr) {  // Добавлена проверка выделения памяти
+        std::cout << "Memory allocation failed\n";
+    }
+}
 
-    // Получение данных от клиента
-    char buffer[1024];
-    int bytesReceived = recv(clientSock, buffer, sizeof(buffer) - 1, 0);
-        
-    if (bytesReceived > 0) {
-      buffer[bytesReceived] = '\0';
-      std::string text(buffer);
-            
-      std::cout << "Received from client: " << text << "\n";
+Server::~Server() {
+    if (buf != nullptr) {  // Добавлена проверка перед освобождением
+        free(buf);
+    }
+}
 
-      // Вставка пробелов перед прописными буквами, если перед ними строчная
-      std::string result;
-      for (size_t i = 0; i < text.length(); ++i) {
-        if (i > 0 && islower(text[i - 1]) && isupper(text[i])) {
-          result += ' ';
+// Привязываем сервер к IP-адресу.
+void Server::start() {
+    int res = bind(serverSocket, (LPSOCKADDR)&serverSIN, sizeof(serverSIN));
+    if (res == SOCKET_ERROR) {
+        std::cout << "Failed to bind server: %d\n" << WSAGetLastError()  << "\n";
+        Server::close();
+        return;
+    }
+    std::cout << "Server binded to port " << port << "\n"; // Добавлен номер порта для информации
+}
+
+// Запускаем работу сервера.
+void Server::run() {
+    int res;
+    sockaddr_in clientSIN;  // Добавлено: объявление структуры для клиента
+    int clientSINSize = sizeof(clientSIN);
+    
+    while (true) {
+        // Инициализируем слушающий сокет.
+        res = listen(serverSocket, MAX_CON_NUM);
+        if (res == SOCKET_ERROR) {
+            std::cout << "Failed to start listen: " << WSAGetLastError() << "\n"; // Исправлено: GetLastError() -> WSAGetLastError()
+            continue;
         }
-        result += text[i];
-      }
+        std::cout << "Listening for connections on port " << port << "\n";
 
-      std::cout << "Processed result: " << result << "\n";
+        // Ожидаем запрос к серверу и записываем дескриптор сокета клиента.
+        SOCKET clientSocket = accept(serverSocket, (struct sockaddr*)&clientSIN, &clientSINSize);  // Исправлено: добавлено объявление clientSocket
+        if (clientSocket == INVALID_SOCKET) {
+            std::cout << "Failed to accept client: " << WSAGetLastError() << "\n"; // Исправлено: GetLastError() -> WSAGetLastError()
+            continue;
+        }
+        std::cout << "Accept connection from " << inet_ntoa(clientSIN.sin_addr) << ", port " << ntohs(clientSIN.sin_port) << "\n";
+        
+        // Получаем данные от клиента.
+        res = recv(clientSocket, buf, BUF_SIZE - 1, 0);  // Исправлено: BUF_SIZE -> BUF_SIZE-1 для места под '\0'
 
-      // Отправка результата клиенту
-      send(clientSock, result.c_str(), result.length(), 0);
-      std::cout << "Response sent to client\n";
-      } else if (bytesReceived == 0) {
-        std::cout << "Client disconnected\n";
-      } else {
-        std::cout << "Recv failed: " << WSAGetLastError() << "\n";
-      }
+        if (res == SOCKET_ERROR) {
+            // ошибка получения данных
+            std::cout << "recv failed: " << WSAGetLastError() << "\n"; // Исправлено: GetLastError() -> WSAGetLastError()
+            closesocket(clientSocket);
+            continue;
+        }
+        else if (res == 0) {
+            // соединение закрыто клиентом
+            std::cout << "connection closed...\n";
+            closesocket(clientSocket);
+            continue;
+        }
+        else if (res > 0) {
+            // Мы знаем фактический размер полученных данных,
+            // поэтому ставим метку конца строки в буфере запроса.
+            buf[res] = '\0';
+            std::cout <<  "Received string: " << buf << "\n";
+        }
 
-      closesocket(clientSock);
-      std::cout << "Connection closed\n";
-      std::cout << "Waiting for new connections...\n";
+        // Обработка текста по варианту задания
+        std::string text(buf);  // Исправлено: создание строки из буфера
+        std::string result;
+        
+        // Вставка пробелов перед прописными буквами, если перед ними строчная
+        for (size_t i = 0; i < text.length(); ++i) {
+            if (i > 0 && islower((unsigned char)text[i - 1]) && isupper((unsigned char)text[i])) {  // Исправлено: добавлено приведение типов
+                result += ' ';
+            }
+            result += text[i];
+        }
+        
+        // Отправка обработанного результата обратно клиенту
+        res = send(clientSocket, result.c_str(), result.length(), 0);  // Исправлено: отправляем result, а не buf, убрано MSG_DONTROUTE
+
+        if (res == SOCKET_ERROR) {
+            std::cout << "send failed: " << WSAGetLastError() << "\n";
+        } else {
+            std::cout << "Sent response: " << result.c_str() << "\n";
+        }
+
+        closesocket(clientSocket);
+        std::cout << "Client disconnected.\n";
     }
+}
 
-    closesocket(ServSock);
+void Server::close() {
+    if (serverSocket != INVALID_SOCKET) {
+        closesocket(serverSocket);
+        serverSocket = INVALID_SOCKET;
+    }
+    if (clientSocket != INVALID_SOCKET) {  // Исправлено: добавлена проверка
+        closesocket(clientSocket);
+        clientSocket = INVALID_SOCKET;
+    }
     WSACleanup();
-    return 0;
+    std::cout << "Server closed.\n";
 }
