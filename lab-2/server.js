@@ -77,7 +77,7 @@ function huffman_encoding(symbols, probabilities) {
 
       codes[node.symbol] = code;
       decodes[code] = node.symbol;
-      avg_len += (code).length / symbols.length;
+      avg_len += (code).length * probabilities[symbols.indexOf(node.symbol)];
       craft += 2 ** (-(code).length);
       return;
     }
