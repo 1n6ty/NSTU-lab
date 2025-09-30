@@ -1,0 +1,5 @@
+*.o
+.venv
+*.exe
+.vscode
+node_modules

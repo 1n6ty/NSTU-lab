@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="author" content="Artyom Eroshchenko, Yana Kaufman, Maria Kovaleva">
+        <title>Coder/lab-2</title>
+
+        <link href="/css/bootstrap.min.css" rel="stylesheet" type="text/css" crossorigin="anonymous">
+    </head>
+    <body style="width: 50vw;">
+        <br/>
+        <form method="POST" action="/prob/">
+            <div class="input-group mb-1">
+                <input id="probInp" class="form-control" aria-describedby="basic-addon3" placeholder="e.g. 0.23;0.41;0.36" type="text" name="prob" pattern="^([01]\.[0-9]*;?)*$" value="<%= prob %>"/>
+                <button type="button" class="btn btn-primary" disabled>Probabilities</button>
+            </div>
+            <div class="input-group mb-1">
+                <input id="symInp" class="form-control" aria-describedby="basic-addon3" placeholder="e.g. s;y;m" type="text" name="sym" pattern="^([a-zA-Z]*;?)*$" value="<%= sym %>"/>
+                <button type="button" class="btn btn-primary" disabled>Symbols</button>
+            </div>
+            <h6 style="color: var('--danger');"></h6>
+            <button type="submit" class="btn btn-primary mb-3" id="sbmtBtn">Submit</button>
+        </form>
+        <a href="/gentext/">Text Generation</a>
+        <a href="/encode/">Encode</a>
+        <a href="/decode/">Decode</a>
+        <br/>
+        <a id="clear" href="/clear/">Clear all</a>
+        <script src="/js/bootstrap.bundle.min.js"></script>
+        <script>
+            /**
+             * Handles the "Clear" button click.
+             * Sends a POST request to `/clear/` to reset all stored data on the server,
+             * then clears the probability and symbol input fields in the UI.
+             *
+             * @param {Event} e - The click event object.
+             */
+            const handleClear = (e) => {
+                e.preventDefault(); 
+
+                fetch("/clear/", {
+                    method: "POST"
+                })
+                    .then((response) => {
+                        document.querySelector("#probInp").value = "";
+                        document.querySelector("#symInp").value = "";
+                    })
+                    .catch(error => alert(error));
+            };
+
+            /**
+             * Handles the submission of probability and symbol inputs.
+             * Sends a POST request to `/prob/` with form data (symbols + probabilities),
+             * validates on the server, and updates the UI with success or error messages.
+             *
+             * @param {Event} event - The form submit event object.
+             */
+            const handleSubmitProb = event => {
+                event.preventDefault();
+
+                const form = event.target;
+
+                fetch("/prob/", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                    body: new URLSearchParams(new FormData(form)).toString()
+                })
+                    .then((response) => {
+                        response.json().then((response_json) => {
+                            if(!(response_json.err)){
+                                document.querySelector("#sbmtBtn").innerHTML = "Saved";
+                                setTimeout(() => {document.querySelector("#sbmtBtn").innerHTML = "Submit";}, 5000);
+                            }
+                            document.querySelector("h6").innerHTML = response_json.err;
+                        });
+                    })
+                    .catch(error => alert(error));
+            };
+
+            // Attach event listeners for form submission and clear button
+            document.querySelector("form").addEventListener("submit", handleSubmitProb);
+            document.querySelector("#clear").addEventListener("click", handleClear);
+        </script>
+    </body>
+</html>
