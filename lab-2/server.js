@@ -85,7 +85,7 @@ function huffman_encoding(symbols, probabilities) {
     generateCodes(node.right, code + "1");
   })(root);
 
-  let r = avg_len - probabilities.reduce((prev, e) => {return prev + e * Math.log2(1 / e);}, 0);
+  let r = avg_len - probabilities.reduce((prev, e) => {return prev + ((e != 0) ? e * Math.log2(1 / e): 0) ;}, 0);
 
   return {codes: codes, decodes: decodes, avg_len: avg_len, r: r, craft: craft};
 }
