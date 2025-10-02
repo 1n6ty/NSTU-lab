@@ -11,14 +11,14 @@ Client::Client(const char* ip, unsigned short port) {
     this->port = port;
 
     int res = WSAStartup(0x0101, &wsaData);
-    if (res != 0) {  // Исправлено: WSAStartup возвращает 0 при успехе
+    if (res != 0) {
         std::cout << "WSAStartup() failed: " << res << "\n";
         return;
     }
 
     // Получаем дескриптор сокета клиента.
     clientSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-    if (clientSocket == INVALID_SOCKET) {  // Исправлено: SOCKET_ERROR -> INVALID_SOCKET
+    if (clientSocket == INVALID_SOCKET) {
         std::cout << "Failed to create client socket: " << WSAGetLastError() << "\n";
         return;
     }
@@ -70,7 +70,7 @@ void Client::sendRequest(){
     memset(buf, 0, BUF_SIZE);
 
     // Получаем обработанную строку от сервера
-    res = recv(clientSocket, buf, BUF_SIZE - 1, 0);  // -1 для места под '\0'
+    res = recv(clientSocket, buf, BUF_SIZE - 1, 0);
     if (res == SOCKET_ERROR) {
         std::cout << "Server is not responding: " << WSAGetLastError() << "\n";
     }
