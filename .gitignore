@@ -1,0 +1,6 @@
+*.o
+*.out
+.venv
+*.exe
+.vscode
+node_modules
