@@ -11,6 +11,7 @@
 
 #include "pirson.h"
 #include <stdlib.h>
+#define _USE_MATH_DEFINES
 #include <cmath>
 
 /**
@@ -64,7 +65,7 @@ double pirson_compute_density(double x, Pirson_p *p, Pirson_Status *status){
         return -1;
     }
     
-    return std::pow(1 + x * x, -p->v) / std::beta(p->v - 0.5, 0.5);
+    return pow(1 + x * x, -p->v) / std::beta(p->v - 0.5, 0.5);
 }
 
 /**
