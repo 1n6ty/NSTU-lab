@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="author" content="Artyom Eroshchenko, Yana Kaufman, Maria Kovaleva">
+        <title>Coder/lab-3</title>
+
+        <link href="/css/bootstrap.min.css" rel="stylesheet" type="text/css" crossorigin="anonymous">
+    </head>
+    <body style="width: 50vw;">
+        <br/>
+        <div class="input-group mb-1">
+            <textarea id="symInp" class="form-control" aria-describedby="basic-addon3" type="text" readonly><%= text %></textarea>
+            <button id="encBtn" class="btn btn-primary">Encode</button>
+        </div>
+        <div class="input-group mb-1">
+            <textarea id="symEnc" class="form-control" aria-describedby="basic-addon3" type="text" readonly><%= encoded %></textarea>
+            <button type="button" class="btn btn-primary" disabled>Encoded Text</button>
+        </div>
+        <div class="input-group mb-3">
+            <textarea id="props" class="form-control" aria-describedby="basic-addon3" type="text" readonly><%= props %></textarea>
+            <button type="button" class="btn btn-primary" disabled>Properties</button>
+        </div>
+        <br/>
+        <a href="/">Home</a>
+        <a href="/gentext/">Text Generation</a>
+        <br/>
+        <a href="/decode/">Decode</a>
+        <script src="/js/bootstrap.bundle.min.js"></script>
+        <script>
+            /**
+             * Handles the "Encode" button click.
+             * Sends a POST request to `/encode/` to encode the current plain text,
+             * then updates the textarea with the encoded bitstring.
+             *
+             * @param {Event} event - The click event object.
+             */
+            const handleEncoding = event => {
+                event.preventDefault();
+
+                fetch("/encode/", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" }
+                })
+                    .then((response) => {
+                        response.json().then((json_response) => {
+                            document.querySelector("#symEnc").value = json_response.encoded;
+                        })
+                    })
+                    .catch(error => alert(error));
+            };
+
+            // Attach event listener to "Encode" button
+            document.querySelector("#encBtn").addEventListener("click", handleEncoding);
+        </script>
+    </body>
+</html>

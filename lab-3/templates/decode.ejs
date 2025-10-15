@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="author" content="Artyom Eroshchenko, Yana Kaufman, Maria Kovaleva">
+        <title>Coder/lab-3</title>
+
+        <link href="/css/bootstrap.min.css" rel="stylesheet" type="text/css" crossorigin="anonymous">
+    </head>
+    <body style="width: 50vw;">
+        <br/>
+        <div class="input-group mb-1">
+            <textarea id="symInp" class="form-control" aria-describedby="basic-addon3" type="text" readonly><%= text %></textarea>
+            <button id="decBtn" class="btn btn-primary">Decode</button>
+        </div>
+        <div class="input-group mb-1">
+            <textarea id="symDec" class="form-control" aria-describedby="basic-addon3" type="text" readonly><%= decoded %></textarea>
+            <button type="button" class="btn btn-primary" disabled>Decoded Text</button>
+        </div>
+        <div class="input-group mb-3">
+            <textarea id="props" class="form-control" aria-describedby="basic-addon3" type="text" readonly><%= props %></textarea>
+            <button type="button" class="btn btn-primary" disabled>Properties</button>
+        </div>
+        <br/>
+        <a href="/">Home</a>
+        <a href="/gentext/">Text Generation</a>
+        <br/>
+        <a href="/encode/">Encode</a>
+        <script src="/js/bootstrap.bundle.min.js"></script>
+        <script>
+            /**
+             * Handles the "Decode" button click.
+             * Sends a POST request to `/decode/` to decode the previously encoded text,
+             * then updates the textarea with the decoded string.
+             *
+             * @param {Event} event - The click event object.
+             */
+            const handleDecoding = event => {
+                event.preventDefault();
+
+                fetch("/decode/", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" }
+                })
+                    .then((response) => {
+                        response.json().then((json_response) => {
+                            document.querySelector("#symDec").value = json_response.decoded;
+                        })
+                    })
+                    .catch(error => alert(error));
+            };
+
+            // Attach event listener to "Decode" button
+            document.querySelector("#decBtn").addEventListener("click", handleDecoding);
+        </script>
+    </body>
+</html>
