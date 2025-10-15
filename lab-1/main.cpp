@@ -224,7 +224,6 @@ void runEmpirical() {
     }
 }
 
-/** Entry point */
 int main() {
     while (true) {
         int mode = inputInt("\nMain menu: (0-exit, 1-Pirson-VII, 2-Mix, 3-Empirical): ", 0, 3);
