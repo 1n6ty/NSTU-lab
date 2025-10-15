@@ -1,6 +1,5 @@
 /**
  * @file    mixd.h
- * @author  Artyom Eroshchenko <eroshhenko.2023@stud.nstu.ru>
  * @version 1.0
  *
  * @section DESCRIPTION
@@ -16,7 +15,6 @@
 
 /**
  * @enum Mix_Status
- * @author  Artyom Eroshchenko <eroshhenko.2023@stud.nstu.ru>
  * @version 1.0
  * 
  * @brief Object with all status codes that could be produced by functions
@@ -28,7 +26,6 @@ enum Mix_Status {
 
 /**
  * @struct  Mix_p
- * @author  Artyom Eroshchenko <eroshhenko.2023@stud.nstu.ru>
  * @version 1.0
  * 
  * @brief   The structure of parameters for Mix distribution.
@@ -44,7 +41,6 @@ struct Mix_p{
 };
 
 /**
- * @author  Artyom Eroshchenko <eroshhenko.2023@stud.nstu.ru>
  * @version 1.0
  * 
  * @brief   Constructor of the structure for Mix distribution.
@@ -57,7 +53,6 @@ struct Mix_p{
 Mix_p *new_Mix_p(Alt_Pirson_p* params, double *coefs, unsigned int size);
 
 /**
- * @author  Artyom Eroshchenko <eroshhenko.2023@stud.nstu.ru>
  * @version 1.0
  * 
  * @brief   Destructor of the structure for Mix distribution.
@@ -67,7 +62,6 @@ Mix_p *new_Mix_p(Alt_Pirson_p* params, double *coefs, unsigned int size);
 void del_Mix_p(Mix_p *m);
 
 /**
- * @author  Artyom Eroshchenko <eroshhenko.2023@stud.nstu.ru>
  * @version 1.0
  * 
  * @section Mix distribution

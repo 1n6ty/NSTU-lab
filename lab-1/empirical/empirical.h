@@ -1,6 +1,5 @@
 /**
  * @file    empirical.h
- * @author  Artyom Eroshchenko <eroshhenko.2023@stud.nstu.ru>
  * @version 1.0
  *
  * @section DESCRIPTION
@@ -14,7 +13,6 @@
 
 /**
  * @enum Empirical_Status
- * @author  Artyom Eroshchenko <eroshhenko.2023@stud.nstu.ru>
  * @version 1.0
  * 
  * @brief Object with all status codes that could be produced by functions
@@ -25,7 +23,6 @@ enum Empirical_Status {
 
 /**
  * @struct  Empirical_p
- * @author  Artyom Eroshchenko <eroshhenko.2023@stud.nstu.ru>
  * @version 1.0
  * 
  * @brief   The structure of parameters for empirical distribution.
@@ -39,6 +36,7 @@ enum Empirical_Status {
  */
 struct Empirical_p{
     unsigned int n;
+    double R; 
     double *x;
     unsigned int *freq;
     unsigned int k;
@@ -47,7 +45,6 @@ struct Empirical_p{
 };
 
 /**
- * @author  Artyom Eroshchenko <eroshhenko.2023@stud.nstu.ru>
  * @version 1.0
  * 
  * @brief   Constructor of the structure for empirical distribution.
@@ -59,7 +56,6 @@ struct Empirical_p{
 Empirical_p *new_Empirical_p(double *x, unsigned int n);
 
 /**
- * @author  Artyom Eroshchenko <eroshhenko.2023@stud.nstu.ru>
  * @version 1.0
  * 
  * @brief   Destructor of the structure for empirical distribution.
@@ -69,7 +65,6 @@ Empirical_p *new_Empirical_p(double *x, unsigned int n);
 void del_Empirical_p(Empirical_p *p);
 
 /**
- * @author  Artyom Eroshchenko <eroshhenko.2023@stud.nstu.ru>
  * @version 1.0
  * 
  * @section Empirical

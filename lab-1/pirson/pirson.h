@@ -1,6 +1,5 @@
 /**
  * @file    pirson.h
- * @author  Artyom Eroshchenko <eroshhenko.2023@stud.nstu.ru>
  * @version 1.0
  *
  * @section DESCRIPTION
@@ -13,7 +12,6 @@
 
 /**
  * @enum Pirson_Status
- * @author  Artyom Eroshchenko <eroshhenko.2023@stud.nstu.ru>
  * @version 1.0
  * 
  * @brief Object with all status codes that could be produced by functions
@@ -25,7 +23,6 @@ enum Pirson_Status {
 
 /**
  * @struct  Pirson_p
- * @author  Artyom Eroshchenko <eroshhenko.2023@stud.nstu.ru>
  * @version 1.0
  * 
  * @brief   The structure of parameters for Pirson-VII distribution.
@@ -37,7 +34,6 @@ struct Pirson_p{
 };
 
 /**
- * @author  Artyom Eroshchenko <eroshhenko.2023@stud.nstu.ru>
  * @version 1.0
  * 
  * @brief   Constructor of the structure for Pirson-VII distribution.
@@ -48,7 +44,6 @@ struct Pirson_p{
 Pirson_p *new_Pirson_p(double v);
 
 /**
- * @author  Artyom Eroshchenko <eroshhenko.2023@stud.nstu.ru>
  * @version 1.0
  * 
  * @brief   Destructor of the structure for Pirson-VII distribution.
@@ -58,7 +53,6 @@ Pirson_p *new_Pirson_p(double v);
 void del_Pirson_p(Pirson_p *p);
 
 /**
- * @author  Artyom Eroshchenko <eroshhenko.2023@stud.nstu.ru>
  * @version 1.0
  * 
  * @section Pirson-VII

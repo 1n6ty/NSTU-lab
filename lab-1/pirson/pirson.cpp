@@ -1,6 +1,5 @@
 /**
  * @file    pirson.cpp
- * @author  Artyom Eroshchenko <eroshhenko.2023@stud.nstu.ru>
  * @version 1.0
  *
  * @section DESCRIPTION
@@ -15,7 +14,6 @@
 #include <cmath>
 
 /**
- * @author  Artyom Eroshchenko <eroshhenko.2023@stud.nstu.ru>
  * @version 1.0
  * 
  * @brief   Constructor of the structure for Pirson-VII distribution.
@@ -32,7 +30,6 @@ Pirson_p *new_Pirson_p(double v){
 }
 
 /**
- * @author  Artyom Eroshchenko <eroshhenko.2023@stud.nstu.ru>
  * @version 1.0
  * 
  * @brief   Destructor of the structure for Pirson-VII distribution.
@@ -44,7 +41,6 @@ void del_Pirson_p(Pirson_p *p){
 }
 
 /**
- * @author  Artyom Eroshchenko <eroshhenko.2023@stud.nstu.ru>
  * @version 1.0
  * 
  * @brief   Computes density of pirson-VII distribution.
@@ -69,7 +65,6 @@ double pirson_compute_density(double x, Pirson_p *p, Pirson_Status *status){
 }
 
 /**
- * @author  Artyom Eroshchenko <eroshhenko.2023@stud.nstu.ru>
  * @version 1.0
  * 
  * @brief   Computes Mathematical Expectation of pirson-VII distribution.
@@ -93,7 +88,6 @@ double pirson_compute_mat_expectation(Pirson_p *p, Pirson_Status *status){
 }
 
 /**
- * @author  Artyom Eroshchenko <eroshhenko.2023@stud.nstu.ru>
  * @version 1.0
  * 
  * @brief   Computes Dispersion of pirson-VII distribution.
@@ -117,7 +111,6 @@ double pirson_compute_dispersion(Pirson_p *p, Pirson_Status *status){
 }
 
 /**
- * @author  Artyom Eroshchenko <eroshhenko.2023@stud.nstu.ru>
  * @version 1.0
  * 
  * @brief   Computes Skewness of pirson-VII distribution.
@@ -141,7 +134,6 @@ double pirson_compute_skewness(Pirson_p *p, Pirson_Status *status){
 }
 
 /**
- * @author  Artyom Eroshchenko <eroshhenko.2023@stud.nstu.ru>
  * @version 1.0
  * 
  * @brief   Computes Excess of pirson-VII distribution.
@@ -165,7 +157,6 @@ double pirson_compute_excess(Pirson_p *p, Pirson_Status *status){
 }
 
 /**
- * @author  Artyom Eroshchenko <eroshhenko.2023@stud.nstu.ru>
  * @version 1.0
  * 
  * @brief   Generates out of pirson-VII distribution.

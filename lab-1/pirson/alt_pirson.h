@@ -1,6 +1,5 @@
 /**
  * @file    alt_pirson.h
- * @author  Artyom Eroshchenko <eroshhenko.2023@stud.nstu.ru>
  * @version 1.0
  *
  * @section DESCRIPTION
@@ -16,7 +15,6 @@
 
 /**
  * @enum Alt_Pirson_Status
- * @author  Artyom Eroshchenko <eroshhenko.2023@stud.nstu.ru>
  * @version 1.0
  * 
  * @brief Object with all status codes that could be produced by functions
@@ -28,7 +26,6 @@ enum Alt_Pirson_Status {
 
 /**
  * @struct  Alt_Pirson_p
- * @author  Artyom Eroshchenko <eroshhenko.2023@stud.nstu.ru>
  * @version 1.0
  * 
  * @brief   The structure of parameters for altered Pirson-VII distribution.
@@ -44,7 +41,6 @@ struct Alt_Pirson_p{
 };
 
 /**
- * @author  Artyom Eroshchenko <eroshhenko.2023@stud.nstu.ru>
  * @version 1.0
  * 
  * @brief   Constructor of the structure for altered Pirson-VII distribution.
@@ -57,7 +53,6 @@ struct Alt_Pirson_p{
 Alt_Pirson_p *new_Alt_Pirson_p(Pirson_p *dp, double u, double a);
 
 /**
- * @author  Artyom Eroshchenko <eroshhenko.2023@stud.nstu.ru>
  * @version 1.0
  * 
  * @brief   Destructor of the structure for altered Pirson-VII distribution.
@@ -67,7 +62,6 @@ Alt_Pirson_p *new_Alt_Pirson_p(Pirson_p *dp, double u, double a);
 void del_Alt_Pirson_p(Alt_Pirson_p *p);
 
 /**
- * @author  Artyom Eroshchenko <eroshhenko.2023@stud.nstu.ru>
  * @version 1.0
  * 
  * @section Altered Pirson-VII

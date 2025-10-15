@@ -1,6 +1,5 @@
 /**
  * @file    alt_pirson.cpp
- * @author  Artyom Eroshchenko <eroshhenko.2023@stud.nstu.ru>
  * @version 1.0
  *
  * @section DESCRIPTION
@@ -16,7 +15,6 @@
 #define EPS 1e-15
 
 /**
- * @author  Artyom Eroshchenko <eroshhenko.2023@stud.nstu.ru>
  * @version 1.0
  * 
  * @brief   Constructor of the structure for empirical distribution.
@@ -25,52 +23,39 @@
  * @param   x array of points
  * @return  pointer to new empirical structure
  */
-Empirical_p *new_Empirical_p(double *x, unsigned int n){
-    if(n == 0) return nullptr;
+Empirical_p *new_Empirical_p(double *x, unsigned int n) {
+    if (n == 0) return nullptr;
 
-    Empirical_p *ep = (Empirical_p *) malloc(sizeof(Empirical_p));
-    if(ep == NULL) return nullptr;
+    Empirical_p *ep = (Empirical_p *)malloc(sizeof(Empirical_p));
+    if (!ep) return nullptr;
 
     ep->x = x;
     ep->n = n;
 
     ep->min_x = __DBL_MAX__;
     ep->max_x = -__DBL_MAX__;
-    for(unsigned int i = 0; i < n; i++){
-        if(x[i] < ep->min_x) ep->min_x = x[i];
-        if(x[i] > ep->max_x) ep->max_x = x[i];
+    for (unsigned int i = 0; i < n; i++) {
+        if (x[i] < ep->min_x) ep->min_x = x[i];
+        if (x[i] > ep->max_x) ep->max_x = x[i];
     }
 
     ep->k = (unsigned int)std::log2(n) + 1;
-    double R = (ep->max_x - ep->min_x) / ep->k;
+    ep->R = (ep->max_x - ep->min_x) / ep->k;
 
-    unsigned int *freq = (unsigned int *) malloc(sizeof(unsigned int) * ep->k);
-    if(freq == NULL) return nullptr;
+    unsigned int *freq = (unsigned int *)calloc(ep->k, sizeof(unsigned int));
+    if (!freq) return nullptr;
 
-    double prev = ep->min_x;
-    double next = prev + R, buf;
-    for(unsigned int i = 0; i < ep->k; i++){
-        if(i == ep->k - 1){
-            next = ep->max_x;
-        }
-
-        buf = 0;
-        for(unsigned int xi = 0; xi < n; xi++){
-            if(x[xi] <= next and prev < x[xi]) buf ++;
-        }
-        freq[i] = buf;
-
-        prev = next;
-        next += R;
+    for (unsigned int i = 0; i < n; i++) {
+        int bin = (int)((x[i] - ep->min_x) / ep->R);
+        if (bin >= (int)ep->k) bin = ep->k - 1;
+        freq[bin]++;
     }
-    freq[0] ++;
-    ep->freq = freq;
 
+    ep->freq = freq;
     return ep;
 }
 
 /**
- * @author  Artyom Eroshchenko <eroshhenko.2023@stud.nstu.ru>
  * @version 1.0
  * 
  * @brief   Destructor of the structure for empirical distribution.
@@ -84,7 +69,6 @@ void del_Empirical_p(Empirical_p *p){
 }
 
 /**
- * @author  Artyom Eroshchenko <eroshhenko.2023@stud.nstu.ru>
  * @version 1.0
  * 
  * @brief   Computes density of empirical distribution.
@@ -94,30 +78,18 @@ void del_Empirical_p(Empirical_p *p){
  * @param   status pointer to a variable where to put status codes
  * @return  probability density at @p x point
  */
-double empirical_compute_density(double x, Empirical_p *p, Empirical_Status *status){
+double empirical_compute_density(double x, Empirical_p *p, Empirical_Status *status) {
     *status = EMPIRICAL_SUCCESS;
+    if (x < p->min_x || x > p->max_x) return 0;
 
-    if(x <= p->min_x || x > p->max_x) return 0;
+    int bin = (int)((x - p->min_x) / p->R);
+    if (bin >= (int)p->k) bin = p->k - 1;
 
-    double R = (p->max_x - p->min_x) / p->k;
-    double prev = p->min_x;
-    double next = prev + R;
-    for(unsigned int i = 0; i < p->k; i++){
-        if(i == p->k - 1){
-            next = p->max_x;
-        }
-
-        if(x <= next and prev < x) return p->freq[i] * p->k / p->n / (p->max_x - p->min_x);
-
-        prev = next;
-        next += R;
-    }
-
-    return 0;
+    double density = (double)p->freq[bin] / (p->n * p->R);
+    return density;
 }
 
 /**
- * @author  Artyom Eroshchenko <eroshhenko.2023@stud.nstu.ru>
  * @version 1.0
  * 
  * @brief   Computes Mathematical Expectation of empirical distribution.
@@ -136,7 +108,6 @@ double empirical_compute_mat_expectation(Empirical_p *p, Empirical_Status *statu
 }
 
 /**
- * @author  Artyom Eroshchenko <eroshhenko.2023@stud.nstu.ru>
  * @version 1.0
  * 
  * @brief   Computes Dispersion of empirical distribution.
@@ -156,7 +127,6 @@ double empirical_compute_dispersion(Empirical_p *p, Empirical_Status *status){
 }
 
 /**
- * @author  Artyom Eroshchenko <eroshhenko.2023@stud.nstu.ru>
  * @version 1.0
  * 
  * @brief   Computes Skewness of empirical distribution.
@@ -176,7 +146,6 @@ double empirical_compute_skewness(Empirical_p *p, Empirical_Status *status){
 }
 
 /**
- * @author  Artyom Eroshchenko <eroshhenko.2023@stud.nstu.ru>
  * @version 1.0
  * 
  * @brief   Computes Excess of empirical distribution.
@@ -196,7 +165,6 @@ double empirical_compute_excess(Empirical_p *p, Empirical_Status *status){
 }
 
 /**
- * @author  Artyom Eroshchenko <eroshhenko.2023@stud.nstu.ru>
  * @version 1.0
  * 
  * @brief   Generates x out of empirical distribution.
@@ -205,14 +173,22 @@ double empirical_compute_excess(Empirical_p *p, Empirical_Status *status){
  * @param   status pointer to a variable where to put status codes
  * @return  generated x
  */
-double empirical_generate_x(Empirical_p *p, Empirical_Status *status){
+double empirical_generate_x(Empirical_p *p, Empirical_Status *status) {
     *status = EMPIRICAL_SUCCESS;
 
-    double r = (double)rand() / RAND_MAX, cum_p = 0, R = (p->max_x - p->min_x) / p->k;;
+    double r = (double)rand() / (RAND_MAX + 1.0);
+    double cum_p = 0.0;
+
     for(unsigned int i = 0; i < p->k; i++){
-        cum_p += p->freq[i] / p->n;
-        if(cum_p + EPS >= r) return p->min_x + R * (i + (double)rand() / RAND_MAX);
+        double bin_prob = (double)p->freq[i] / p->n;
+        cum_p += bin_prob;
+
+        if(r <= cum_p){
+            double u = (double)rand() / (RAND_MAX + 1.0);
+            double x = p->min_x + p->R * (i + u);
+            return x;
+        }
     }
 
-    return p->min_x + R * (p->k - 1 + (double)rand() / RAND_MAX);
+    return p->max_x - p->R * ((double)rand() / (RAND_MAX + 1.0));
 }

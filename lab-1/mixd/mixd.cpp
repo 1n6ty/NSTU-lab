@@ -1,6 +1,5 @@
 /**
  * @file    mixd.cpp
- * @author  Artyom Eroshchenko <eroshhenko.2023@stud.nstu.ru>
  * @version 1.0
  *
  * @section DESCRIPTION
@@ -16,7 +15,6 @@
 #define EPS 1e-15
 
 /**
- * @author  Artyom Eroshchenko <eroshhenko.2023@stud.nstu.ru>
  * @version 1.0
  * 
  * @brief   Constructor of the structure for Mix distribution.
@@ -47,7 +45,6 @@ Mix_p *new_Mix_p(Alt_Pirson_p* params, double *coefs, unsigned int size){
 }
 
 /**
- * @author  Artyom Eroshchenko <eroshhenko.2023@stud.nstu.ru>
  * @version 1.0
  * 
  * @brief   Destructor of the structure for Mix distribution.
@@ -63,7 +60,6 @@ void del_Mix_p(Mix_p *m){
 }
 
 /**
- * @author  Artyom Eroshchenko <eroshhenko.2023@stud.nstu.ru>
  * @version 1.0
  * 
  * @brief   Computes density of mix distribution.
@@ -93,7 +89,6 @@ double mix_compute_density(double x, Mix_p *m, Mix_Status *status){
 }
 
 /**
- * @author  Artyom Eroshchenko <eroshhenko.2023@stud.nstu.ru>
  * @version 1.0
  * 
  * @brief   Computes Mathematical Expectation of mix distribution.
@@ -122,7 +117,6 @@ double mix_compute_mat_expectation(Mix_p *m, Mix_Status *status){
 }
 
 /**
- * @author  Artyom Eroshchenko <eroshhenko.2023@stud.nstu.ru>
  * @version 1.0
  * 
  * @brief   Computes Dispersion of mix distribution.
@@ -165,7 +159,6 @@ double mix_compute_dispersion(Mix_p *m, Mix_Status *status){
 }
 
 /**
- * @author  Artyom Eroshchenko <eroshhenko.2023@stud.nstu.ru>
  * @version 1.0
  * 
  * @brief   Computes Skewness of mix distribution.
@@ -216,7 +209,6 @@ double mix_compute_skewness(Mix_p *m, Mix_Status *status){
 }
 
 /**
- * @author  Artyom Eroshchenko <eroshhenko.2023@stud.nstu.ru>
  * @version 1.0
  * 
  * @brief   Computes Excess of mix distribution.
@@ -272,7 +264,6 @@ double mix_compute_excess(Mix_p *m, Mix_Status *status){
 }
 
 /**
- * @author  Artyom Eroshchenko <eroshhenko.2023@stud.nstu.ru>
  * @version 1.0
  * 
  * @brief   Generates x out of mix distribution.

@@ -1,6 +1,5 @@
 /**
  * @file    alt_pirson.cpp
- * @author  Artyom Eroshchenko <eroshhenko.2023@stud.nstu.ru>
  * @version 1.0
  *
  * @section DESCRIPTION
@@ -13,7 +12,6 @@
 #include <stdlib.h>
 
 /**
- * @author  Artyom Eroshchenko <eroshhenko.2023@stud.nstu.ru>
  * @version 1.0
  * 
  * @brief   Constructor of the structure for altered Pirson-VII distribution.
@@ -39,7 +37,6 @@ Alt_Pirson_p *new_Alt_Pirson_p(Pirson_p *dp, double u, double a){
 }
 
 /**
- * @author  Artyom Eroshchenko <eroshhenko.2023@stud.nstu.ru>
  * @version 1.0
  * 
  * @brief   Destructor of the structure for altered Pirson-VII distribution.
@@ -52,7 +49,6 @@ void del_Alt_Pirson_p(Alt_Pirson_p *p){
 }
 
 /**
- * @author  Artyom Eroshchenko <eroshhenko.2023@stud.nstu.ru>
  * @version 1.0
  * 
  * @brief   Computes density of altered pirson-VII distribution.
@@ -84,7 +80,6 @@ double pirson_compute_density(double x, Alt_Pirson_p *p, Alt_Pirson_Status *stat
 }
 
 /**
- * @author  Artyom Eroshchenko <eroshhenko.2023@stud.nstu.ru>
  * @version 1.0
  * 
  * @brief   Computes Mathematical Expectation of altered pirson-VII distribution.
@@ -110,7 +105,6 @@ double pirson_compute_mat_expectation(Alt_Pirson_p *p, Alt_Pirson_Status *status
 }
 
 /**
- * @author  Artyom Eroshchenko <eroshhenko.2023@stud.nstu.ru>
  * @version 1.0
  * 
  * @brief   Computes Dispersion of altered pirson-VII distribution.
@@ -136,7 +130,6 @@ double pirson_compute_dispersion(Alt_Pirson_p *p, Alt_Pirson_Status *status){
 }
 
 /**
- * @author  Artyom Eroshchenko <eroshhenko.2023@stud.nstu.ru>
  * @version 1.0
  * 
  * @brief   Computes Skewness of altered pirson-VII distribution.
@@ -162,7 +155,6 @@ double pirson_compute_skewness(Alt_Pirson_p *p, Alt_Pirson_Status *status){
 }
 
 /**
- * @author  Artyom Eroshchenko <eroshhenko.2023@stud.nstu.ru>
  * @version 1.0
  * 
  * @brief   Computes Excess of altered pirson-VII distribution.
@@ -188,7 +180,6 @@ double pirson_compute_excess(Alt_Pirson_p *p, Alt_Pirson_Status *status){
 }
 
 /**
- * @author  Artyom Eroshchenko <eroshhenko.2023@stud.nstu.ru>
  * @version 1.0
  * 
  * @brief   Generates x out of altered pirson-VII distribution.
