@@ -127,8 +127,78 @@ const decodeSymbol = (str) => {
 };
 
 // ===================================================================
-//  Helper: Random Symbol Generation
+//  Utility
 // ===================================================================
+
+
+/**
+ * Computes Hamming distance between two equal-length binary strings.
+ * @param {string} a
+ * @param {string} b
+ * @returns {number} Distance
+ */
+const hammingDistance = (a, b) =>
+  a.split("").reduce((acc, ch, i) => acc + (ch !== b[i] ? 1 : 0), 0);
+
+/**
+ * Computes C(n, i)
+ * @param {number} n
+ * @param {number} i
+ * @returns {number} C(n, i)
+ */
+const C = (n, i) => {
+  if (i < 0 || i > n) return 0;
+  if (i > n - i) i = n - i; // symmetry
+  let res = 1;
+  for (let k = 1; k <= i; k++) {
+    res *= (n - k + 1) / k;
+  }
+  return res;
+};
+
+/**
+ * Computes all pairwise Hamming distances for codewords.
+ * @param {Object} codes - Symbol-to-code map
+ * @returns {{pairs: string[], distances: number[], minDist: number}}
+ */
+const computeHammingMetrics = (codes) => {
+  const keys = Object.keys(codes);
+  const n = keys.length;
+  const pairs = [];
+  const distances = [];
+  for (let i = 0; i < n; i++) {
+    for (let j = i + 1; j < n; j++) {
+      const d = hammingDistance(codes[keys[i]], codes[keys[j]]);
+      pairs.push(`${keys[i]}-${keys[j]}`);
+      distances.push(d);
+    }
+  }
+  const minDist = Math.min(...distances);
+  return { pairs, distances, minDist };
+};
+
+/**
+ * Computes Hamming, Plotkin, and Varshamov bounds.
+ * @param {number} M - Number of codewords
+ * @param {number} n - Codeword length
+ * @param {number} dmin - minimum hamming distance
+ * @returns {Object}
+ */
+const computeBounds = (M, n, dmin) => {
+  const k = n - 4;
+  const hammingEdge = `${4} >= ${Math.log2([0, 1].reduce((acc, ch) => acc + C(n, ch), 0)).toFixed(3)}`;
+  const plotkinBound = `${dmin} <= ${(n * (2 ** (k - 1)) / (2 ** (k - 1) - 1)).toFixed(3)}`;
+
+  let varr = [];
+  for(let i = 0; i <= dmin - 2; i ++) varr.push(i);
+  const varshamovBound = `${2 ** (n - k)} > ${varr.reduce((acc, ch) => acc + C(n - 1, ch), 0).toFixed(3)}`;
+
+  return {
+    hammingEdge: hammingEdge,
+    plotkinBound: plotkinBound,
+    varshamovBound: varshamovBound,
+  };
+};
 
 /**
  * Generates a random symbol based on given probabilities.
@@ -178,14 +248,33 @@ app.get("/encode/", (req, res) => {
   const text = fs.readFileSync("./tmp/text_ham", "utf8");
   const encoded = fs.readFileSync("./tmp/encoded_ham", "utf8");
 
-  const props = getAlphabet()
-    .sym.map(
+  const alphabet = getAlphabet();
+  const codes = {};
+
+  alphabet.sym.forEach((s) => {
+    const hammingCode = encodeHamming(to5BitArray(s)).join("");
+    codes[s] = hammingCode;
+  });
+
+  let props = alphabet.sym
+    .map(
       (i) =>
         `${i} -> ${to5BitArray(i).join("")} -> ${encodeHamming(
           to5BitArray(i)
         ).join("")}`
     )
     .join("\n");
+
+  const { pairs, distances, minDist } = computeHammingMetrics(codes);
+  const bounds = computeBounds(Object.keys(codes).length, Object.values(codes)[0].length, minDist);
+
+  props +=
+    `\n\nCode metrics:\n` +
+    `Min Hamming distance: ${minDist}\n` +
+    `Hamming edge: ${bounds.hammingEdge}\n` +
+    `Plotkin bound: ${bounds.plotkinBound}\n` +
+    `Varshamov bound: ${bounds.varshamovBound}\n\nHamming distances:\n` +
+    pairs.map((p, i) => `${p}: ${distances[i]}`).join("\n");
 
   res.render("encode", { text, encoded, props });
 });
@@ -209,14 +298,33 @@ app.get("/decode/", (req, res) => {
   const encoded = fs.readFileSync("./tmp/encoded_ham", "utf8");
   const decoded = fs.readFileSync("./tmp/decoded_ham", "utf8");
 
-  const props = getAlphabet()
-    .sym.map(
+  const alphabet = getAlphabet();
+  const codes = {};
+
+  alphabet.sym.forEach((s) => {
+    const hammingCode = encodeHamming(to5BitArray(s)).join("");
+    codes[s] = hammingCode;
+  });
+
+  let props = alphabet.sym
+    .map(
       (i) =>
         `${i} -> ${to5BitArray(i).join("")} -> ${encodeHamming(
           to5BitArray(i)
         ).join("")}`
     )
     .join("\n");
+
+  const { pairs, distances, minDist } = computeHammingMetrics(codes);
+  const bounds = computeBounds(Object.keys(codes).length, Object.values(codes)[0].length, minDist);
+
+  props +=
+    `\n\nCode metrics:\n` +
+    `Min Hamming distance: ${minDist}\n` +
+    `Hamming edge: ${bounds.hammingEdge}\n` +
+    `Plotkin bound: ${bounds.plotkinBound}\n` +
+    `Varshamov bound: ${bounds.varshamovBound}\n\nHamming distances:\n` +
+    pairs.map((p, i) => `${p}: ${distances[i]}`).join("\n");
 
   res.render("decode", { text: encoded, decoded, props });
 });
