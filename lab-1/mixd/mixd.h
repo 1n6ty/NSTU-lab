@@ -1,10 +1,10 @@
 /**
  * @file    mixd.h
- * @version 1.0
+ * @version 2.0
  *
  * @section DESCRIPTION
  *
- *          Header file for mix of two Pirson-VII distributions
+ *          Header file for mix of two Pearson-VII distributions
  *          structures and functions.
  */
 
@@ -12,10 +12,12 @@
 #define MIXD_H
 
 #include "../pirson/alt_pirson.h"
+#include <vector>
+#include <stdexcept>
 
 /**
  * @enum Mix_Status
- * @version 1.0
+ * @version 2.0
  * 
  * @brief Object with all status codes that could be produced by functions
  */
@@ -26,34 +28,32 @@ enum Mix_Status {
 
 /**
  * @struct  Mix_p
- * @version 1.0
+ * @version 2.0
  * 
  * @brief   The structure of parameters for Mix distribution.
  * 
- * @param   params altered Pirson-VII distribution parameters array
- * @param   coefs mix parameters
- * @param   size size of @p params and @p coefs
+ * @param   distributions vector of TransformedPearson distributions
+ * @param   coefficients mix coefficients
  */
 struct Mix_p{
-    Alt_Pirson_p* params;
-    double *coefs;
-    unsigned int size;
+    std::vector<TransformedPearson> distributions;
+    std::vector<double> coefficients;
 };
 
 /**
- * @version 1.0
+ * @version 2.0
  * 
  * @brief   Constructor of the structure for Mix distribution.
  * 
- * @param   params altered Pirson-VII distribution parameters array
- * @param   coefs mix parameters
- * @param   size size of @p params and @p coefs
+ * @param   distributions vector of TransformedPearson distributions
+ * @param   coefficients mix coefficients
  * @return  pointer to new Mix structure
  */
-Mix_p *new_Mix_p(Alt_Pirson_p* params, double *coefs, unsigned int size);
+Mix_p *new_Mix_p(const std::vector<TransformedPearson>& distributions, 
+                 const std::vector<double>& coefficients);
 
 /**
- * @version 1.0
+ * @version 2.0
  * 
  * @brief   Destructor of the structure for Mix distribution.
  * 
@@ -62,7 +62,7 @@ Mix_p *new_Mix_p(Alt_Pirson_p* params, double *coefs, unsigned int size);
 void del_Mix_p(Mix_p *m);
 
 /**
- * @version 1.0
+ * @version 2.0
  * 
  * @section Mix distribution
  *  
@@ -76,5 +76,12 @@ double mix_compute_dispersion(Mix_p *m, Mix_Status *status);
 double mix_compute_skewness(Mix_p *m, Mix_Status *status);
 double mix_compute_excess(Mix_p *m, Mix_Status *status);
 double mix_generate_x(Mix_p *m, Mix_Status *status);
+
+// Исключения для смеси
+class MixException : public std::runtime_error {
+public:
+    explicit MixException(const std::string& message) 
+        : std::runtime_error(message) {}
+};
 
 #endif

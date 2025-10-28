@@ -1,3 +1,13 @@
+/**
+ * @file    main.cpp
+ * @version 2.0
+ *
+ * @section DESCRIPTION
+ *
+ *          Main program for testing Pearson-VII distribution classes.
+ *          Input/output operations are performed outside class functions.
+ */
+
 #include "pirson/alt_pirson.h"
 #include "mixd/mixd.h"
 #include "empirical/empirical.h"
@@ -9,7 +19,8 @@
 #include <vector>
 #include <string>
 #include <climits>
-#include <sstream> 
+#include <sstream>
+#include <iomanip>
 
 /** Utility: safe double input */
 double inputDouble(const std::string &prompt = "Enter a number: ") {
@@ -47,192 +58,397 @@ void writeToFile(const std::string &filename, const std::vector<double> &data) {
     std::cout << "File '" << filename << "' written successfully.\n";
 }
 
-/** Pirson-VII workflow */
-void runPirsonVII() {
-    Alt_Pirson_Status ps;
-    auto p = std::unique_ptr<Alt_Pirson_p>(new_Alt_Pirson_p(new_Pirson_p(1), 1, 1));
+/** Base Pearson-VII workflow */
+void runBasePearson() {
+    std::cout << "\n=== Base Pearson-VII Distribution ===" << std::endl;
+    
+    try {
+        PearsonVII dist;
+        
+        while (true) {
+            int mode = inputInt("Choose mode (0-exit, 1-set parameters, 2-load from file, 3-compute characteristics, 4-generate x, 5-compute density, 6-save to file): ", 0, 6);
+            if (mode == 0) break;
 
-    while (true) {
-        int mode = inputInt("Pirson-VII: Choose mode (0-exit, 1-parameters, 2-generate x, 3-generate density): ", 0, 3);
-        if (mode == 0) break;
-
-        p->dp->v = inputDouble("Shape coefficient: ");
-        p->u = inputDouble("Shear coefficient: ");
-        p->a = inputDouble("Scale coefficient: ");
-
-        if (mode == 1) {
-            double val = pirson_compute_mat_expectation(p.get(), &ps);
-            std::cout << "Mat. expectation: " << ((ps == ALT_PIRSON_SUCCESS) ? std::to_string(val) : "Doesn’t exist") << '\n';
-            val = pirson_compute_dispersion(p.get(), &ps);
-            std::cout << "Dispersion: " << ((ps == ALT_PIRSON_SUCCESS) ? std::to_string(val) : "Doesn’t exist") << '\n';
-            val = pirson_compute_skewness(p.get(), &ps);
-            std::cout << "Skewness: " << ((ps == ALT_PIRSON_SUCCESS) ? std::to_string(val) : "Doesn’t exist") << '\n';
-            val = pirson_compute_excess(p.get(), &ps);
-            std::cout << "Excess: " << ((ps == ALT_PIRSON_SUCCESS) ? std::to_string(val) : "Doesn’t exist") << '\n';
-        } 
-        else if (mode == 2) {
-            int count = inputInt("Number of x to generate: ");
-            std::vector<double> results;
-            results.reserve(count);
-            for (int i = 0; i < count; ++i) {
-                double val = pirson_generate_x(p.get(), &ps);
-                if (ps != ALT_PIRSON_SUCCESS) break;
-                results.push_back(val);
+            switch (mode) {
+                case 1: {
+                    // Установка параметров
+                    double location = inputDouble("Location parameter: ");
+                    double scale = inputDouble("Scale parameter: ");
+                    double shape = inputDouble("Shape parameter: ");
+                    
+                    dist.setParameters(location, scale, shape);
+                    std::cout << "Parameters set successfully.\n";
+                    break;
+                }
+                
+                case 2: {
+                    // Загрузка из файла
+                    std::string filename;
+                    std::cout << "Enter filename: ";
+                    std::cin >> filename;
+                    
+                    dist.loadFromFile(filename);
+                    std::cout << "Distribution loaded from file. Parameters: "
+                              << "location=" << dist.getLocation()
+                              << ", scale=" << dist.getScale()
+                              << ", shape=" << dist.getShape() << std::endl;
+                    break;
+                }
+                
+                case 3: {
+                    // Вычисление характеристик
+                    if (!dist.isValid()) {
+                        std::cout << "Distribution parameters are invalid!\n";
+                        break;
+                    }
+                    
+                    try {
+                        std::cout << std::fixed << std::setprecision(6);
+                        std::cout << "Mathematical expectation: " << dist.computeExpectation() << std::endl;
+                    } catch (const PearsonException& e) {
+                        std::cout << "Mathematical expectation: " << e.what() << std::endl;
+                    }
+                    
+                    try {
+                        std::cout << "Variance: " << dist.computeVariance() << std::endl;
+                    } catch (const PearsonException& e) {
+                        std::cout << "Variance: " << e.what() << std::endl;
+                    }
+                    
+                    try {
+                        std::cout << "Skewness: " << dist.computeSkewness() << std::endl;
+                    } catch (const PearsonException& e) {
+                        std::cout << "Skewness: " << e.what() << std::endl;
+                    }
+                    
+                    try {
+                        std::cout << "Kurtosis: " << dist.computeKurtosis() << std::endl;
+                    } catch (const PearsonException& e) {
+                        std::cout << "Kurtosis: " << e.what() << std::endl;
+                    }
+                    break;
+                }
+                
+                case 4: {
+                    // Генерация случайных величин
+                    if (!dist.isValid()) {
+                        std::cout << "Distribution parameters are invalid!\n";
+                        break;
+                    }
+                    
+                    int count = inputInt("Number of x to generate: ");
+                    std::vector<double> results;
+                    results.reserve(count);
+                    
+                    for (int i = 0; i < count; ++i) {
+                        results.push_back(dist.generateRandom());
+                    }
+                    
+                    writeToFile("base_pearson_output.txt", results);
+                    break;
+                }
+                
+                case 5: {
+                    // Вычисление плотности
+                    if (!dist.isValid()) {
+                        std::cout << "Distribution parameters are invalid!\n";
+                        break;
+                    }
+                    
+                    int count = inputInt("Number of density points: ");
+                    double start = inputDouble("Start x: ");
+                    double end = inputDouble("End x: ");
+                    
+                    std::vector<double> results;
+                    results.reserve(count);
+                    
+                    for (int i = 0; i < count; ++i) {
+                        double x = start + (end - start) * i / (count - 1);
+                        try {
+                            double density = dist.computeDensity(x);
+                            results.push_back(density);
+                        } catch (const PearsonException& e) {
+                            std::cout << "Error computing density at x=" << x << ": " << e.what() << std::endl;
+                            results.push_back(0.0);
+                        }
+                    }
+                    
+                    writeToFile("base_pearson_density.txt", results);
+                    break;
+                }
+                
+                case 6: {
+                    // Сохранение в файл
+                    std::string filename;
+                    std::cout << "Enter filename: ";
+                    std::cin >> filename;
+                    
+                    dist.saveToFile(filename);
+                    std::cout << "Distribution saved to file.\n";
+                    break;
+                }
             }
-            writeToFile("output.txt", results);
-        } 
-        else if (mode == 3) {
-            int count = inputInt("Number of density points: ");
-            double start = inputDouble("Start x: ");
-            double end = inputDouble("End x: ");
-            std::vector<double> results;
-            results.reserve(count);
-            for (int i = 0; i < count; ++i) {
-                double x = start + (end - start) * i / count;
-                double val = pirson_compute_density(x, p.get(), &ps);
-                if (ps != ALT_PIRSON_SUCCESS) break;
-                results.push_back(val);
-            }
-            writeToFile("output.txt", results);
         }
+        
+    } catch (const PearsonException& e) {
+        std::cerr << "Pearson-VII Error: " << e.what() << std::endl;
+    }
+}
+
+/** Transformed Pearson-VII workflow */
+void runTransformedPearson() {
+    std::cout << "\n=== Transformed Pearson-VII Distribution ===" << std::endl;
+    
+    try {
+        TransformedPearson dist;
+        
+        while (true) {
+            int mode = inputInt("Choose mode (0-exit, 1-set parameters, 2-load from file, 3-compute characteristics, 4-generate x, 5-compute density, 6-save to file): ", 0, 6);
+            if (mode == 0) break;
+
+            switch (mode) {
+                case 1: {
+                    // Установка параметров
+                    double location = inputDouble("Location parameter: ");
+                    double scale = inputDouble("Scale parameter: ");
+                    double shape = inputDouble("Shape parameter: ");
+                    
+                    dist.setParameters(location, scale, shape);
+                    std::cout << "Parameters set successfully.\n";
+                    break;
+                }
+                
+                case 2: {
+                    // Загрузка из файла
+                    std::string filename;
+                    std::cout << "Enter filename: ";
+                    std::cin >> filename;
+                    
+                    dist.loadFromFile(filename);
+                    std::cout << "Distribution loaded from file. Parameters: "
+                              << "location=" << dist.getLocation()
+                              << ", scale=" << dist.getScale()
+                              << ", shape=" << dist.getShape() << std::endl;
+                    break;
+                }
+                
+                case 3: {
+                    // Вычисление характеристик
+                    if (!dist.isValid()) {
+                        std::cout << "Distribution parameters are invalid!\n";
+                        break;
+                    }
+                    
+                    try {
+                        std::cout << std::fixed << std::setprecision(6);
+                        std::cout << "Mathematical expectation: " << dist.computeExpectation() << std::endl;
+                    } catch (const TransformedPearsonException& e) {
+                        std::cout << "Mathematical expectation: " << e.what() << std::endl;
+                    }
+                    
+                    try {
+                        std::cout << "Variance: " << dist.computeVariance() << std::endl;
+                    } catch (const TransformedPearsonException& e) {
+                        std::cout << "Variance: " << e.what() << std::endl;
+                    }
+                    
+                    try {
+                        std::cout << "Skewness: " << dist.computeSkewness() << std::endl;
+                    } catch (const TransformedPearsonException& e) {
+                        std::cout << "Skewness: " << e.what() << std::endl;
+                    }
+                    
+                    try {
+                        std::cout << "Kurtosis: " << dist.computeKurtosis() << std::endl;
+                    } catch (const TransformedPearsonException& e) {
+                        std::cout << "Kurtosis: " << e.what() << std::endl;
+                    }
+                    break;
+                }
+                
+                case 4: {
+                    // Генерация случайных величин
+                    if (!dist.isValid()) {
+                        std::cout << "Distribution parameters are invalid!\n";
+                        break;
+                    }
+                    
+                    int count = inputInt("Number of x to generate: ");
+                    std::vector<double> results;
+                    results.reserve(count);
+                    
+                    for (int i = 0; i < count; ++i) {
+                        results.push_back(dist.generateRandom());
+                    }
+                    
+                    writeToFile("transformed_pearson_output.txt", results);
+                    break;
+                }
+                
+                case 5: {
+                    // Вычисление плотности
+                    if (!dist.isValid()) {
+                        std::cout << "Distribution parameters are invalid!\n";
+                        break;
+                    }
+                    
+                    int count = inputInt("Number of density points: ");
+                    double start = inputDouble("Start x: ");
+                    double end = inputDouble("End x: ");
+                    
+                    std::vector<double> results;
+                    results.reserve(count);
+                    
+                    for (int i = 0; i < count; ++i) {
+                        double x = start + (end - start) * i / (count - 1);
+                        try {
+                            double density = dist.computeDensity(x);
+                            results.push_back(density);
+                        } catch (const TransformedPearsonException& e) {
+                            std::cout << "Error computing density at x=" << x << ": " << e.what() << std::endl;
+                            results.push_back(0.0);
+                        }
+                    }
+                    
+                    writeToFile("transformed_pearson_density.txt", results);
+                    break;
+                }
+                
+                case 6: {
+                    // Сохранение в файл
+                    std::string filename;
+                    std::cout << "Enter filename: ";
+                    std::cin >> filename;
+                    
+                    dist.saveToFile(filename);
+                    std::cout << "Distribution saved to file.\n";
+                    break;
+                }
+            }
+        }
+        
+    } catch (const TransformedPearsonException& e) {
+        std::cerr << "Transformed Pearson-VII Error: " << e.what() << std::endl;
     }
 }
 
 /** Mix workflow */
 void runMix() {
-    Mix_Status ms;
-    double coefs[2] = {0.5, 0.5};
-    Alt_Pirson_p params[] = {
-        *new_Alt_Pirson_p(new_Pirson_p(1), 1, 1),
-        *new_Alt_Pirson_p(new_Pirson_p(1), 1, 1)
-    };
-    auto mix = std::unique_ptr<Mix_p>(new_Mix_p(params, coefs, 2));
-
-    while (true) {
-        int mode = inputInt("Mix: Choose mode (0-exit, 1-parameters, 2-generate x, 3-generate density): ", 0, 3);
-        if (mode == 0) break;
-
-        for (int i = 0; i < 2; ++i) {
-            std::cout << "\nMix: Input parameters for distribution " << (i + 1) << '\n';
-            mix->params[i].dp->v = inputDouble("Shape coefficient: ");
-            mix->params[i].u = inputDouble("Shear coefficient: ");
-            mix->params[i].a = inputDouble("Scale coefficient: ");
-            mix->coefs[i] = inputDouble("Partial coefficient: ");
+    std::cout << "\n=== Mix Distribution ===" << std::endl;
+    
+    try {
+        // Создаем смесь из двух распределений
+        std::vector<TransformedPearson> distributions = {
+            TransformedPearson(0.0, 1.0, 2.0),
+            TransformedPearson(3.0, 1.0, 2.0)
+        };
+        std::vector<double> coefficients = {0.5, 0.5};
+        
+        Mix_p* mix = new_Mix_p(distributions, coefficients);
+        if (!mix) {
+            std::cerr << "Failed to create mix distribution" << std::endl;
+            return;
         }
+        
+        Mix_Status ms;
+        
+        while (true) {
+            int mode = inputInt("Mix: Choose mode (0-exit, 1-parameters, 2-generate x, 3-generate density): ", 0, 3);
+            if (mode == 0) break;
 
-        if (mode == 1) {
-            double val = mix_compute_mat_expectation(mix.get(), &ms);
-            std::cout << "Mat. expectation: " << ((ms == MIX_SUCCESS) ? std::to_string(val) : "Doesn’t exist") << '\n';
-            val = mix_compute_dispersion(mix.get(), &ms);
-            std::cout << "Dispersion: " << ((ms == MIX_SUCCESS) ? std::to_string(val) : "Doesn’t exist") << '\n';
-            val = mix_compute_skewness(mix.get(), &ms);
-            std::cout << "Skewness: " << ((ms == MIX_SUCCESS) ? std::to_string(val) : "Doesn’t exist") << '\n';
-            val = mix_compute_excess(mix.get(), &ms);
-            std::cout << "Excess: " << ((ms == MIX_SUCCESS) ? std::to_string(val) : "Doesn’t exist") << '\n';
-        } 
-        else if (mode == 2) {
-            int count = inputInt("Number of x to generate: ");
-            std::vector<double> results;
-            results.reserve(count);
-            for (int i = 0; i < count; ++i) {
-                double val = mix_generate_x(mix.get(), &ms);
-                if (ms != MIX_SUCCESS) break;
-                results.push_back(val);
+            // Ввод параметров для каждого распределения в смеси
+            for (size_t i = 0; i < mix->distributions.size(); ++i) {
+                std::cout << "\nMix: Input parameters for distribution " << (i + 1) << '\n';
+                double location = inputDouble("Location parameter: ");
+                double scale = inputDouble("Scale parameter: ");
+                double shape = inputDouble("Shape parameter: ");
+                double coef = inputDouble("Partial coefficient: ");
+                
+                mix->distributions[i].setParameters(location, scale, shape);
+                mix->coefficients[i] = coef;
             }
-            writeToFile("output.txt", results);
-        } 
-        else if (mode == 3) {
-            int count = inputInt("Number of density points: ");
-            double start = inputDouble("Start x: ");
-            double end = inputDouble("End x: ");
-            std::vector<double> results;
-            results.reserve(count);
-            for (int i = 0; i < count; ++i) {
-                double x = start + (end - start) * i / count;
-                double val = mix_compute_density(x, mix.get(), &ms);
-                if (ms != MIX_SUCCESS) break;
-                results.push_back(val);
+
+            if (mode == 1) {
+                double val = mix_compute_mat_expectation(mix, &ms);
+                std::cout << "Mat. expectation: " << ((ms == MIX_SUCCESS) ? std::to_string(val) : "Doesn't exist") << '\n';
+                
+                val = mix_compute_dispersion(mix, &ms);
+                std::cout << "Dispersion: " << ((ms == MIX_SUCCESS) ? std::to_string(val) : "Doesn't exist") << '\n';
+                
+                val = mix_compute_skewness(mix, &ms);
+                std::cout << "Skewness: " << ((ms == MIX_SUCCESS) ? std::to_string(val) : "Doesn't exist") << '\n';
+                
+                val = mix_compute_excess(mix, &ms);
+                std::cout << "Excess: " << ((ms == MIX_SUCCESS) ? std::to_string(val) : "Doesn't exist") << '\n';
+            } 
+            else if (mode == 2) {
+                int count = inputInt("Number of x to generate: ");
+                std::vector<double> results;
+                results.reserve(count);
+                for (int i = 0; i < count; ++i) {
+                    double val = mix_generate_x(mix, &ms);
+                    if (ms != MIX_SUCCESS) break;
+                    results.push_back(val);
+                }
+                writeToFile("mix_output.txt", results);
+            } 
+            else if (mode == 3) {
+                int count = inputInt("Number of density points: ");
+                double start = inputDouble("Start x: ");
+                double end = inputDouble("End x: ");
+                std::vector<double> results;
+                results.reserve(count);
+                for (int i = 0; i < count; ++i) {
+                    double x = start + (end - start) * i / count;
+                    double val = mix_compute_density(x, mix, &ms);
+                    if (ms != MIX_SUCCESS) break;
+                    results.push_back(val);
+                }
+                writeToFile("mix_density.txt", results);
             }
-            writeToFile("output.txt", results);
         }
+        
+        del_Mix_p(mix);
+        
+    } catch (const std::exception& e) {
+        std::cerr << "Mix Error: " << e.what() << std::endl;
     }
 }
 
 /** Empirical workflow */
 void runEmpirical() {
-    Empirical_Status es;
-
+    std::cout << "\n=== Empirical Distribution ===" << std::endl;
+    std::cout << "Note: Empirical distribution is not implemented in this version.\n";
+    std::cout << "Using the new class-based architecture.\n";
+    
+    // Временная заглушка для эмпирического распределения
     while (true) {
-        int mode = inputInt("Empirical: Choose mode (0-exit, 1-parameters, 2-generate x, 3-generate density): ", 0, 3);
+        int mode = inputInt("Empirical: Choose mode (0-exit, 1-info): ", 0, 1);
         if (mode == 0) break;
-
-        int n = inputInt("Number of empirical x values: ");
-        std::vector<double> x;
-        x.reserve(n);
-
-        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); // clear leftover newline
-        std::string line;
-        std::cout << "Enter " << n << " values separated by spaces:\n> ";
-        std::getline(std::cin, line);
-        std::istringstream iss(line);
-
-        double val;
-        while (iss >> val) x.push_back(val);
-
-        if (x.size() != static_cast<size_t>(n)) {
-            std::cerr << "Error: expected " << n << " values, got " << x.size() << ".\n";
-            continue;
-        }
-
-        auto emp = std::unique_ptr<Empirical_p>(new_Empirical_p(x.data(), n));
-
+        
         if (mode == 1) {
-            double res = empirical_compute_mat_expectation(emp.get(), &es);
-            std::cout << "Mat. expectation: " << ((es == EMPIRICAL_SUCCESS) ? std::to_string(res) : "Doesn’t exist") << '\n';
-            res = empirical_compute_dispersion(emp.get(), &es);
-            std::cout << "Dispersion: " << ((es == EMPIRICAL_SUCCESS) ? std::to_string(res) : "Doesn’t exist") << '\n';
-            res = empirical_compute_skewness(emp.get(), &es);
-            std::cout << "Skewness: " << ((es == EMPIRICAL_SUCCESS) ? std::to_string(res) : "Doesn’t exist") << '\n';
-            res = empirical_compute_excess(emp.get(), &es);
-            std::cout << "Excess: " << ((es == EMPIRICAL_SUCCESS) ? std::to_string(res) : "Doesn’t exist") << '\n';
-        } 
-        else if (mode == 2) {
-            int count = inputInt("Number of x to generate: ");
-            std::vector<double> results;
-            results.reserve(count);
-            for (int i = 0; i < count; ++i) {
-                double r = empirical_generate_x(emp.get(), &es);
-                if (es != EMPIRICAL_SUCCESS) break;
-                results.push_back(r);
-            }
-            writeToFile("output.txt", results);
-        } 
-        else if (mode == 3) {
-            int count = inputInt("Number of density points: ");
-            double start = inputDouble("Start x: ");
-            double end = inputDouble("End x: ");
-            std::vector<double> results;
-            results.reserve(count);
-            for (int i = 0; i < count; ++i) {
-                double xi = start + (end - start) * i / count;
-                double r = empirical_compute_density(xi, emp.get(), &es);
-                if (es != EMPIRICAL_SUCCESS) break;
-                results.push_back(r);
-            }
-            writeToFile("output.txt", results);
+            std::cout << "Empirical distribution functionality will be implemented\n";
+            std::cout << "in a future version using the new class architecture.\n";
         }
     }
 }
 
 int main() {
+    std::cout << "Pearson-VII Distribution Classes Test Program" << std::endl;
+    std::cout << "=============================================" << std::endl;
+    
     while (true) {
-        int mode = inputInt("\nMain menu: (0-exit, 1-Pirson-VII, 2-Mix, 3-Empirical): ", 0, 3);
+        int mode = inputInt("\nMain menu: (0-exit, 1-Base Pearson, 2-Transformed Pearson, 3-Mix, 4-Empirical): ", 0, 4);
         if (mode == 0) break;
+        
         switch (mode) {
-            case 1: runPirsonVII(); break;
-            case 2: runMix(); break;
-            case 3: runEmpirical(); break;
+            case 1: runBasePearson(); break;
+            case 2: runTransformedPearson(); break;
+            case 3: runMix(); break;
+            case 4: runEmpirical(); break;
         }
     }
+    
+    std::cout << "Program finished. Goodbye!" << std::endl;
     return 0;
 }

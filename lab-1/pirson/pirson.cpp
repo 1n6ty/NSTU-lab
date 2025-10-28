@@ -1,182 +1,191 @@
 /**
  * @file    pirson.cpp
- * @version 1.0
+ * @version 2.0
  *
  * @section DESCRIPTION
  *
- *          This file initializes structures and functions for Pirson-VII 
- *          distribution. For more see @ref pirson.h "Pirson-VII header file".
+ *          Implementation of PearsonVII class.
  */
 
 #include "pirson.h"
-#include <stdlib.h>
-#define _USE_MATH_DEFINES
+#include <fstream>
 #include <cmath>
+#include <random>
+#include <sstream>
 
-/**
- * @version 1.0
- * 
- * @brief   Constructor of the structure for Pirson-VII distribution.
- * 
- * @param   v shape parameter
- * @return  pointer to new Pirson structure
- */
-Pirson_p *new_Pirson_p(double v){
-    Pirson_p *p = (Pirson_p *) malloc(sizeof(Pirson_p));
-    if(p == NULL) return nullptr;
-    p->v = v;
-
-    return p;
+// Вспомогательная функция для вычисления бета-функции
+double betaFunction(double a, double b) {
+    return std::tgamma(a) * std::tgamma(b) / std::tgamma(a + b);
 }
 
-/**
- * @version 1.0
- * 
- * @brief   Destructor of the structure for Pirson-VII distribution.
- * 
- * @param   p pointer to be freed
- */
-void del_Pirson_p(Pirson_p *p){
-    free(p);
+PearsonVII::PearsonVII(double location, double scale, double shape) 
+    : location_(location), scale_(scale), shape_(shape) {
+    updateNormalizationConstant();
+    is_parameters_valid_ = validateParameters();
 }
 
-/**
- * @version 1.0
- * 
- * @brief   Computes density of pirson-VII distribution.
- * 
- * @details If `p->v` is less or equal `0.5` then PIRSON_INVALID_PARAMETERS
- *          error sets in status
- * 
- * @param   x point at which the density will be computed
- * @param   p pointer to parameters-structure
- * @param   status pointer to a variable where to put status codes
- * @return  probability density at @p x point
- */
-double pirson_compute_density(double x, Pirson_p *p, Pirson_Status *status){
-    *status = PIRSON_SUCCESS;
-    
-    if(p->v <= 0.5){
-        *status = PIRSON_INVALID_PARAMETER;
-        return -1;
+PearsonVII::PearsonVII(const std::string& filename) {
+    loadFromFile(filename);
+}
+
+void PearsonVII::updateNormalizationConstant() {
+    if (shape_ > 0.5 && scale_ > 0) {
+        normalization_constant_ = 1.0 / (std::abs(scale_) * 
+                                betaFunction(shape_ - 0.5, 0.5) * 
+                                std::pow(1.0, shape_ - 0.5));
+    }
+}
+
+bool PearsonVII::validateParameters() const {
+    return (shape_ > 0.5 && scale_ > 0);
+}
+
+bool PearsonVII::isValid() const {
+    return is_parameters_valid_;
+}
+
+// Set-функции
+void PearsonVII::setLocation(double location) {
+    location_ = location;
+    is_parameters_valid_ = validateParameters();
+}
+
+void PearsonVII::setScale(double scale) {
+    if (scale <= 0) {
+        throw PearsonException("Scale parameter must be positive");
+    }
+    scale_ = scale;
+    updateNormalizationConstant();
+    is_parameters_valid_ = validateParameters();
+}
+
+void PearsonVII::setShape(double shape) {
+    if (shape <= 0.5) {
+        throw PearsonException("Shape parameter must be greater than 0.5");
+    }
+    shape_ = shape;
+    updateNormalizationConstant();
+    is_parameters_valid_ = validateParameters();
+}
+
+void PearsonVII::setParameters(double location, double scale, double shape) {
+    if (scale <= 0) {
+        throw PearsonException("Scale parameter must be positive");
+    }
+    if (shape <= 0.5) {
+        throw PearsonException("Shape parameter must be greater than 0.5");
     }
     
-    return pow(1 + x * x, -p->v) / std::beta(p->v - 0.5, 0.5);
+    location_ = location;
+    scale_ = scale;
+    shape_ = shape;
+    updateNormalizationConstant();
+    is_parameters_valid_ = true;
 }
 
-/**
- * @version 1.0
- * 
- * @brief   Computes Mathematical Expectation of pirson-VII distribution.
- * 
- * @details If `p->v` is less or equal `1` then PIRSON_INVALID_PARAMETERS
- *          error sets in status
- * 
- * @param   p pointer to parameters-structure
- * @param   status pointer to a variable where to put status codes
- * @return  Mathematical Expectation
- */
-double pirson_compute_mat_expectation(Pirson_p *p, Pirson_Status *status){
-    *status = PIRSON_SUCCESS;
-    
-    if(p->v <= 1){
-        *status = PIRSON_INVALID_PARAMETER;
-        return -1;
+// Get-функции
+double PearsonVII::getLocation() const { return location_; }
+double PearsonVII::getScale() const { return scale_; }
+double PearsonVII::getShape() const { return shape_; }
+
+// Вычисление плотности
+double PearsonVII::computeDensity(double x) const {
+    if (!is_parameters_valid_) {
+        throw PearsonException("Invalid parameters for density computation");
     }
     
-    return 0;
+    double z = (x - location_) / scale_;
+    return normalization_constant_ * std::pow(1.0 + z * z, -shape_);
 }
 
-/**
- * @version 1.0
- * 
- * @brief   Computes Dispersion of pirson-VII distribution.
- * 
- * @details If `p->v` is less or equal `1.5` then PIRSON_INVALID_PARAMETERS
- *          error sets in status
- * 
- * @param   p pointer to parameters-structure
- * @param   status pointer to a variable where to put status codes
- * @return  Dispersion
- */
-double pirson_compute_dispersion(Pirson_p *p, Pirson_Status *status){
-    *status = PIRSON_SUCCESS;
-
-    if(p->v <= 1.5){
-        *status = PIRSON_INVALID_PARAMETER;
-        return -1;
+// Математическое ожидание
+double PearsonVII::computeExpectation() const {
+    if (!is_parameters_valid_) {
+        throw PearsonException("Invalid parameters for expectation computation");
     }
-    
-    return 1 / (2 * p->v - 3);
+    if (shape_ <= 1.0) {
+        throw PearsonException("Expectation does not exist for shape <= 1");
+    }
+    return location_;
 }
 
-/**
- * @version 1.0
- * 
- * @brief   Computes Skewness of pirson-VII distribution.
- * 
- * @details If `p->v` is less or equal `1.5` then PIRSON_INVALID_PARAMETERS
- *          error sets in status
- * 
- * @param   p pointer to parameters-structure
- * @param   status pointer to a variable where to put status codes
- * @return  Skewness
- */
-double pirson_compute_skewness(Pirson_p *p, Pirson_Status *status){
-    *status = PIRSON_SUCCESS;
-    
-    if(p->v <= 1.5){
-        *status = PIRSON_INVALID_PARAMETER;
-        return -1;
+// Дисперсия
+double PearsonVII::computeVariance() const {
+    if (!is_parameters_valid_) {
+        throw PearsonException("Invalid parameters for variance computation");
     }
-    
-    return 0;
+    if (shape_ <= 1.5) {
+        throw PearsonException("Variance does not exist for shape <= 1.5");
+    }
+    return scale_ * scale_ / (2.0 * shape_ - 3.0);
 }
 
-/**
- * @version 1.0
- * 
- * @brief   Computes Excess of pirson-VII distribution.
- * 
- * @details If `p->v` is less or equal `2.5` then PIRSON_INVALID_PARAMETERS
- *          error sets in status
- * 
- * @param   p pointer to parameters-structure
- * @param   status pointer to a variable where to put status codes
- * @return  Excess
- */
-double pirson_compute_excess(Pirson_p *p, Pirson_Status *status){
-    *status = PIRSON_SUCCESS;
-    
-    if(p->v <= 2.5){
-        *status = PIRSON_INVALID_PARAMETER;
-        return -1;
+// Коэффициент асимметрии
+double PearsonVII::computeSkewness() const {
+    if (!is_parameters_valid_) {
+        throw PearsonException("Invalid parameters for skewness computation");
     }
-    
-    return 6 / (2 * p->v - 5);
+    if (shape_ <= 1.5) {
+        throw PearsonException("Skewness does not exist for shape <= 1.5");
+    }
+    return 0.0; // Распределение симметрично
 }
 
-/**
- * @version 1.0
- * 
- * @brief   Generates out of pirson-VII distribution.
- * 
- * @details If `p->v` is less or equal `0.5` then PIRSON_INVALID_PARAMETERS
- *          error sets in status
- * 
- * @param   p pointer to parameters-structure
- * @param   status pointer to a variable where to put status codes
- * @return  generated x
- */
-double pirson_generate_x(Pirson_p *p, Pirson_Status *status){
-    *status = PIRSON_SUCCESS;
-    
-    if(p->v <= 0.5){
-        *status = PIRSON_INVALID_PARAMETER;
-        return -1;
+// Коэффициент эксцесса
+double PearsonVII::computeKurtosis() const {
+    if (!is_parameters_valid_) {
+        throw PearsonException("Invalid parameters for kurtosis computation");
     }
+    if (shape_ <= 2.0) {
+        throw PearsonException("Kurtosis does not exist for shape <= 2");
+    }
+    return 6.0 / (2.0 * shape_ - 5.0);
+}
 
-    return std::sqrt(
-        std::pow((double)rand() / RAND_MAX, -1. / (p->v - 0.5)) - 1
-    ) * cos(2. * M_PI * rand() / RAND_MAX);
+// Генерация случайной величины
+double PearsonVII::generateRandom() const {
+    if (!is_parameters_valid_) {
+        throw PearsonException("Invalid parameters for random generation");
+    }
+    
+    static std::random_device rd;
+    static std::mt19937 gen(rd());
+    std::uniform_real_distribution<double> dis(0.0, 1.0);
+    
+    // Генерация через обратное преобразование
+    double u = dis(gen);
+    double t = std::pow(u, -1.0 / (shape_ - 0.5)) - 1.0;
+    
+    // Используем константу PI вместо M_PI
+    const double PI = 3.14159265358979323846;
+    double r = std::sqrt(t) * std::cos(2.0 * PI * dis(gen));
+    
+    return location_ + scale_ * r;
+}
+
+// Сохранение в файл
+void PearsonVII::saveToFile(const std::string& filename) const {
+    std::ofstream file(filename);
+    if (!file.is_open()) {
+        throw PearsonException("Cannot open file for writing: " + filename);
+    }
+    
+    file << location_ << " " << scale_ << " " << shape_ << std::endl;
+    file.close();
+}
+
+// Загрузка из файла
+void PearsonVII::loadFromFile(const std::string& filename) {
+    std::ifstream file(filename);
+    if (!file.is_open()) {
+        throw PearsonException("Cannot open file for reading: " + filename);
+    }
+    
+    double loc, scale, shape;
+    if (!(file >> loc >> scale >> shape)) {
+        throw PearsonException("Invalid file format");
+    }
+    
+    setParameters(loc, scale, shape);
+    file.close();
 }

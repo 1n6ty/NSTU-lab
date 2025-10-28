@@ -1,80 +1,80 @@
 /**
  * @file    alt_pirson.h
- * @version 1.0
+ * @version 2.0
  *
  * @section DESCRIPTION
  *
- *          Header file for altered Pirson-VII distribution 
- *          (shear-scale transformed) structures and functions.
+ *          Header file for transformed Pearson-VII distribution class.
  */
 
-#ifndef ALT_PIRSON_H
-#define ALT_PIRSON_H
+#ifndef ALT_PEARSON_H
+#define ALT_PEARSON_H
 
 #include "pirson.h"
+#include <string>
+#include <stdexcept>
+#include <memory>
 
-/**
- * @enum Alt_Pirson_Status
- * @version 1.0
- * 
- * @brief Object with all status codes that could be produced by functions
- */
-enum Alt_Pirson_Status {
-    ALT_PIRSON_INVALID_PARAMETER = -1,
-    ALT_PIRSON_SUCCESS = 0
+class TransformedPearson {
+private:
+    // Обязательные атрибуты
+    double location_;    // параметр сдвига
+    double scale_;       // параметр масштаба
+    double shape_;       // параметр формы
+    
+    // Вспомогательные атрибуты
+    std::unique_ptr<PearsonVII> base_distribution_;
+    bool is_parameters_valid_;
+    
+    // Вспомогательные методы
+    void updateBaseDistribution();
+    bool validateParameters() const;
+
+public:
+    // Конструкторы
+    TransformedPearson(double location = 0.0, double scale = 1.0, double shape = 2.0);
+    TransformedPearson(const std::string& filename);
+    
+    // Запрет копирования (из-за unique_ptr)
+    TransformedPearson(const TransformedPearson& other);
+    TransformedPearson& operator=(const TransformedPearson& other);
+    
+    // Set-функции
+    void setLocation(double location);
+    void setScale(double scale);
+    void setShape(double shape);
+    void setParameters(double location, double scale, double shape);
+    
+    // Get-функции
+    double getLocation() const;
+    double getScale() const;
+    double getShape() const;
+    
+    // Основной функционал
+    double computeDensity(double x) const;
+    double computeExpectation() const;
+    double computeVariance() const;
+    double computeSkewness() const;
+    double computeKurtosis() const;
+    double generateRandom() const;
+    
+    // Функции персистентности
+    void saveToFile(const std::string& filename) const;
+    void loadFromFile(const std::string& filename);
+    
+    // Валидация
+    bool isValid() const;
+    
+    // Специфичные методы для преобразованного распределения
+    double transformToBase(double x) const;
+    double transformFromBase(double y) const;
 };
 
-/**
- * @struct  Alt_Pirson_p
- * @version 1.0
- * 
- * @brief   The structure of parameters for altered Pirson-VII distribution.
- * 
- * @param   dp base Pirson-VII distribution parameters
- * @param   u shear parameter
- * @param   a scale parameter   
- */
-struct Alt_Pirson_p{
-    Pirson_p *dp;
-    double u;
-    double a;
+// Исключения для класса
+class TransformedPearsonException : public std::runtime_error {
+public:
+    explicit TransformedPearsonException(const std::string& message) 
+        : std::runtime_error(message) {}
 };
-
-/**
- * @version 1.0
- * 
- * @brief   Constructor of the structure for altered Pirson-VII distribution.
- * 
- * @param   dp base Pirson-VII distribution parameters
- * @param   u shear parameter
- * @param   a scale parameter   
- * @return  pointer to new altered Pirson structure
- */
-Alt_Pirson_p *new_Alt_Pirson_p(Pirson_p *dp, double u, double a);
-
-/**
- * @version 1.0
- * 
- * @brief   Destructor of the structure for altered Pirson-VII distribution.
- * 
- * @param   p pointer to be freed  
- */
-void del_Alt_Pirson_p(Alt_Pirson_p *p);
-
-/**
- * @version 1.0
- * 
- * @section Altered Pirson-VII
- *  
- *          Functions to compute density, mathematical expectation, dispersion,
- *          skewness and excess coefficient for altered pirson-VII distribution.
- *          Also function to generate random variable under this distribution.
- */
-double pirson_compute_density(double x, Alt_Pirson_p *p, Alt_Pirson_Status *status);
-double pirson_compute_mat_expectation(Alt_Pirson_p *p, Alt_Pirson_Status *status);
-double pirson_compute_dispersion(Alt_Pirson_p *p, Alt_Pirson_Status *status);
-double pirson_compute_skewness(Alt_Pirson_p *p, Alt_Pirson_Status *status);
-double pirson_compute_excess(Alt_Pirson_p *p, Alt_Pirson_Status *status);
-double pirson_generate_x(Alt_Pirson_p *p, Alt_Pirson_Status *status);
 
 #endif

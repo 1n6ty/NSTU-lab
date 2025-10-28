@@ -1,205 +1,218 @@
 /**
  * @file    alt_pirson.cpp
- * @version 1.0
+ * @version 2.0
  *
  * @section DESCRIPTION
  *
- *          This file initializes structures and functions for altered Pirson-VII distribution 
- *          (shear-scale transformed). For more see @ref alt_pirson.h "Altered Pirson-VII header file".
+ *          Implementation of TransformedPearson class.
  */
 
 #include "alt_pirson.h"
-#include <stdlib.h>
+#include <fstream>
+#include <cmath>
+#include <sstream>
 
-/**
- * @version 1.0
- * 
- * @brief   Constructor of the structure for altered Pirson-VII distribution.
- * 
- * @details Also checks if @p a is not `0`
- *          If conditions doesn't met - returns `nullptr`
- * 
- * @param   dp base Pirson-VII distribution parameters
- * @param   u shear parameter
- * @param   a scale parameter   
- * @return  pointer to new altered Pirson structure
- */
-Alt_Pirson_p *new_Alt_Pirson_p(Pirson_p *dp, double u, double a){
-    if(a <= 0) return nullptr;
-
-    Alt_Pirson_p *p = (Alt_Pirson_p *) malloc(sizeof(Alt_Pirson_p));
-    if(p == NULL) return nullptr;
-    p->dp = dp;
-    p->u = u;
-    p->a = a;
-
-    return p;
+TransformedPearson::TransformedPearson(double location, double scale, double shape)
+    : location_(location), scale_(scale), shape_(shape) {
+    updateBaseDistribution();
+    is_parameters_valid_ = validateParameters();
 }
 
-/**
- * @version 1.0
- * 
- * @brief   Destructor of the structure for altered Pirson-VII distribution.
- * 
- * @param   p pointer to be freed  
- */
-void del_Alt_Pirson_p(Alt_Pirson_p *p){
-    del_Pirson_p(p->dp);
-    free(p);
+TransformedPearson::TransformedPearson(const std::string& filename) {
+    loadFromFile(filename);
 }
 
-/**
- * @version 1.0
- * 
- * @brief   Computes density of altered pirson-VII distribution.
- * 
- * @details If PIRSON_INVALID_PARAMETER status occured sets ALT_PIRSON_INVALID_PARAMETER
- *          error in status
- * 
- * @param   x point at which the density will be computed
- * @param   p pointer to parameters-structure
- * @param   status pointer to a variable where to put status codes
- * @return  probability density at @p x point
- */
-double pirson_compute_density(double x, Alt_Pirson_p *p, Alt_Pirson_Status *status){
-    *status = ALT_PIRSON_SUCCESS;
-
-    if(p->a == 0){
-        *status = ALT_PIRSON_INVALID_PARAMETER;
-        return -1;
-    }
-
-    Pirson_Status ps;
-    double alt_density = pirson_compute_density((x - p->u) / p->a, p->dp, &ps);
-    if(ps == PIRSON_INVALID_PARAMETER){
-        *status = ALT_PIRSON_INVALID_PARAMETER;
-        return -1;
-    }
-
-    return (1. / p->a) * alt_density;
+// Конструктор копирования
+TransformedPearson::TransformedPearson(const TransformedPearson& other)
+    : location_(other.location_), scale_(other.scale_), shape_(other.shape_),
+      is_parameters_valid_(other.is_parameters_valid_) {
+    updateBaseDistribution();
 }
 
-/**
- * @version 1.0
- * 
- * @brief   Computes Mathematical Expectation of altered pirson-VII distribution.
- * 
- * @details If PIRSON_INVALID_PARAMETER status occured sets ALT_PIRSON_INVALID_PARAMETER
- *          error in status
- * 
- * @param   p pointer to parameters-structure
- * @param   status pointer to a variable where to put status codes
- * @return  Mathematical Expectation
- */
-double pirson_compute_mat_expectation(Alt_Pirson_p *p, Alt_Pirson_Status *status){
-    *status = ALT_PIRSON_SUCCESS;
-
-    Pirson_Status ps;
-    pirson_compute_mat_expectation(p->dp, &ps);
-    if(ps == PIRSON_INVALID_PARAMETER){
-        *status = ALT_PIRSON_INVALID_PARAMETER;
-        return -1;
+// Оператор присваивания
+TransformedPearson& TransformedPearson::operator=(const TransformedPearson& other) {
+    if (this != &other) {
+        location_ = other.location_;
+        scale_ = other.scale_;
+        shape_ = other.shape_;
+        is_parameters_valid_ = other.is_parameters_valid_;
+        updateBaseDistribution();
     }
-
-    return p->u;
+    return *this;
 }
 
-/**
- * @version 1.0
- * 
- * @brief   Computes Dispersion of altered pirson-VII distribution.
- * 
- * @details If PIRSON_INVALID_PARAMETER status occured sets ALT_PIRSON_INVALID_PARAMETER
- *          error in status
- * 
- * @param   p pointer to parameters-structure
- * @param   status pointer to a variable where to put status codes
- * @return  Dispersion
- */
-double pirson_compute_dispersion(Alt_Pirson_p *p, Alt_Pirson_Status *status){
-    *status = ALT_PIRSON_SUCCESS;
-
-    Pirson_Status ps;
-    double alt_disp = pirson_compute_dispersion(p->dp, &ps);
-    if(ps == PIRSON_INVALID_PARAMETER){
-        *status = ALT_PIRSON_INVALID_PARAMETER;
-        return -1;
-    }
-
-    return p->a * p->a * alt_disp;
+void TransformedPearson::updateBaseDistribution() {
+    base_distribution_ = std::make_unique<PearsonVII>(0.0, 1.0, shape_);
 }
 
-/**
- * @version 1.0
- * 
- * @brief   Computes Skewness of altered pirson-VII distribution.
- * 
- * @details If PIRSON_INVALID_PARAMETER status occured sets ALT_PIRSON_INVALID_PARAMETER
- *          error in status
- * 
- * @param   p pointer to parameters-structure
- * @param   status pointer to a variable where to put status codes
- * @return  Skewness
- */
-double pirson_compute_skewness(Alt_Pirson_p *p, Alt_Pirson_Status *status){
-    *status = ALT_PIRSON_SUCCESS;
-
-    Pirson_Status ps;
-    double alt_skew = pirson_compute_skewness(p->dp, &ps);
-    if(ps == PIRSON_INVALID_PARAMETER){
-        *status = ALT_PIRSON_INVALID_PARAMETER;
-        return -1;
-    }
-
-    return alt_skew;
+bool TransformedPearson::validateParameters() const {
+    return (shape_ > 0.5 && scale_ > 0);
 }
 
-/**
- * @version 1.0
- * 
- * @brief   Computes Excess of altered pirson-VII distribution.
- * 
- * @details If PIRSON_INVALID_PARAMETER status occured sets ALT_PIRSON_INVALID_PARAMETER
- *          error in status
- * 
- * @param   p pointer to parameters-structure
- * @param   status pointer to a variable where to put status codes
- * @return  Excess
- */
-double pirson_compute_excess(Alt_Pirson_p *p, Alt_Pirson_Status *status){
-    *status = ALT_PIRSON_SUCCESS;
-
-    Pirson_Status ps;
-    double alt_excess = pirson_compute_excess(p->dp, &ps);
-    if(ps == PIRSON_INVALID_PARAMETER){
-        *status = ALT_PIRSON_INVALID_PARAMETER;
-        return -1;
-    }
-
-    return alt_excess;
+bool TransformedPearson::isValid() const {
+    return is_parameters_valid_ && base_distribution_->isValid();
 }
 
-/**
- * @version 1.0
- * 
- * @brief   Generates x out of altered pirson-VII distribution.
- * 
- * @details If PIRSON_INVALID_PARAMETER status occured sets ALT_PIRSON_INVALID_PARAMETER
- *          error in status
- * 
- * @param   p pointer to parameters-structure
- * @param   status pointer to a variable where to put status codes
- * @return  generated x
- */
-double pirson_generate_x(Alt_Pirson_p *p, Alt_Pirson_Status *status){
-    *status = ALT_PIRSON_SUCCESS;
+// Set-функции
+void TransformedPearson::setLocation(double location) {
+    location_ = location;
+    is_parameters_valid_ = validateParameters();
+}
 
-    Pirson_Status ps;
-    double alt_gen = pirson_generate_x(p->dp, &ps);
-    if(ps == PIRSON_INVALID_PARAMETER){
-        *status = ALT_PIRSON_INVALID_PARAMETER;
-        return -1;
+void TransformedPearson::setScale(double scale) {
+    if (scale <= 0) {
+        throw TransformedPearsonException("Scale parameter must be positive");
     }
+    scale_ = scale;
+    is_parameters_valid_ = validateParameters();
+}
 
-    return p->u + p->a * alt_gen;
+void TransformedPearson::setShape(double shape) {
+    if (shape <= 0.5) {
+        throw TransformedPearsonException("Shape parameter must be greater than 0.5");
+    }
+    shape_ = shape;
+    updateBaseDistribution();
+    is_parameters_valid_ = validateParameters();
+}
+
+void TransformedPearson::setParameters(double location, double scale, double shape) {
+    if (scale <= 0) {
+        throw TransformedPearsonException("Scale parameter must be positive");
+    }
+    if (shape <= 0.5) {
+        throw TransformedPearsonException("Shape parameter must be greater than 0.5");
+    }
+    
+    location_ = location;
+    scale_ = scale;
+    shape_ = shape;
+    updateBaseDistribution();
+    is_parameters_valid_ = true;
+}
+
+// Get-функции
+double TransformedPearson::getLocation() const { return location_; }
+double TransformedPearson::getScale() const { return scale_; }
+double TransformedPearson::getShape() const { return shape_; }
+
+// Преобразования между базовым и преобразованным распределениями
+double TransformedPearson::transformToBase(double x) const {
+    return (x - location_) / scale_;
+}
+
+double TransformedPearson::transformFromBase(double y) const {
+    return location_ + scale_ * y;
+}
+
+// Вычисление плотности
+double TransformedPearson::computeDensity(double x) const {
+    if (!is_parameters_valid_) {
+        throw TransformedPearsonException("Invalid parameters for density computation");
+    }
+    
+    try {
+        double base_x = transformToBase(x);
+        double base_density = base_distribution_->computeDensity(base_x);
+        return base_density / scale_;
+    } catch (const PearsonException& e) {
+        throw TransformedPearsonException(std::string("Base distribution error: ") + e.what());
+    }
+}
+
+// Математическое ожидание
+double TransformedPearson::computeExpectation() const {
+    if (!is_parameters_valid_) {
+        throw TransformedPearsonException("Invalid parameters for expectation computation");
+    }
+    
+    try {
+        double base_expectation = base_distribution_->computeExpectation();
+        return transformFromBase(base_expectation);
+    } catch (const PearsonException& e) {
+        throw TransformedPearsonException(std::string("Base distribution error: ") + e.what());
+    }
+}
+
+// Дисперсия
+double TransformedPearson::computeVariance() const {
+    if (!is_parameters_valid_) {
+        throw TransformedPearsonException("Invalid parameters for variance computation");
+    }
+    
+    try {
+        double base_variance = base_distribution_->computeVariance();
+        return scale_ * scale_ * base_variance;
+    } catch (const PearsonException& e) {
+        throw TransformedPearsonException(std::string("Base distribution error: ") + e.what());
+    }
+}
+
+// Коэффициент асимметрии
+double TransformedPearson::computeSkewness() const {
+    if (!is_parameters_valid_) {
+        throw TransformedPearsonException("Invalid parameters for skewness computation");
+    }
+    
+    try {
+        // Коэффициент асимметрии инвариантен относительно линейного преобразования
+        return base_distribution_->computeSkewness();
+    } catch (const PearsonException& e) {
+        throw TransformedPearsonException(std::string("Base distribution error: ") + e.what());
+    }
+}
+
+// Коэффициент эксцесса
+double TransformedPearson::computeKurtosis() const {
+    if (!is_parameters_valid_) {
+        throw TransformedPearsonException("Invalid parameters for kurtosis computation");
+    }
+    
+    try {
+        // Коэффициент эксцесса инвариантен относительно линейного преобразования
+        return base_distribution_->computeKurtosis();
+    } catch (const PearsonException& e) {
+        throw TransformedPearsonException(std::string("Base distribution error: ") + e.what());
+    }
+}
+
+// Генерация случайной величины
+double TransformedPearson::generateRandom() const {
+    if (!is_parameters_valid_) {
+        throw TransformedPearsonException("Invalid parameters for random generation");
+    }
+    
+    try {
+        double base_random = base_distribution_->generateRandom();
+        return transformFromBase(base_random);
+    } catch (const PearsonException& e) {
+        throw TransformedPearsonException(std::string("Base distribution error: ") + e.what());
+    }
+}
+
+// Сохранение в файл
+void TransformedPearson::saveToFile(const std::string& filename) const {
+    std::ofstream file(filename);
+    if (!file.is_open()) {
+        throw TransformedPearsonException("Cannot open file for writing: " + filename);
+    }
+    
+    file << location_ << " " << scale_ << " " << shape_ << std::endl;
+    file.close();
+}
+
+// Загрузка из файла
+void TransformedPearson::loadFromFile(const std::string& filename) {
+    std::ifstream file(filename);
+    if (!file.is_open()) {
+        throw TransformedPearsonException("Cannot open file for reading: " + filename);
+    }
+    
+    double loc, scale, shape;
+    if (!(file >> loc >> scale >> shape)) {
+        throw TransformedPearsonException("Invalid file format");
+    }
+    
+    setParameters(loc, scale, shape);
+    file.close();
 }
