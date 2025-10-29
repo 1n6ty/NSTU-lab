@@ -435,18 +435,66 @@ void runMix() {
 
 /** Empirical workflow */
 void runEmpirical() {
-    std::cout << "\n=== Empirical Distribution ===" << std::endl;
-    std::cout << "Note: Empirical distribution is not implemented in this version.\n";
-    std::cout << "Using the new class-based architecture.\n";
-    
-    // Временная заглушка для эмпирического распределения
+    Empirical_Status es;
+
     while (true) {
-        int mode = inputInt("Empirical: Choose mode (0-exit, 1-info): ", 0, 1);
+        int mode = inputInt("Empirical: Choose mode (0-exit, 1-parameters, 2-generate x, 3-generate density): ", 0, 3);
         if (mode == 0) break;
-        
+
+        int n = inputInt("Number of empirical x values: ");
+        std::vector<double> x;
+        x.reserve(n);
+
+        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+        std::string line;
+        std::cout << "Enter " << n << " values separated by spaces:\n> ";
+        std::getline(std::cin, line);
+        std::istringstream iss(line);
+
+        double val;
+        while (iss >> val) x.push_back(val);
+
+        if (x.size() != static_cast<size_t>(n)) {
+            std::cerr << "Error: expected " << n << " values, got " << x.size() << ".\n";
+            continue;
+        }
+
+        auto emp = std::unique_ptr<Empirical_p>(new_Empirical_p(x.data(), n));
+
         if (mode == 1) {
-            std::cout << "Empirical distribution functionality will be implemented\n";
-            std::cout << "in a future version using the new class architecture.\n";
+            double res = empirical_compute_mat_expectation(emp.get(), &es);
+            std::cout << "Mat. expectation: " << ((es == EMPIRICAL_SUCCESS) ? std::to_string(res) : "Doesn’t exist") << '\n';
+            res = empirical_compute_dispersion(emp.get(), &es);
+            std::cout << "Dispersion: " << ((es == EMPIRICAL_SUCCESS) ? std::to_string(res) : "Doesn’t exist") << '\n';
+            res = empirical_compute_skewness(emp.get(), &es);
+            std::cout << "Skewness: " << ((es == EMPIRICAL_SUCCESS) ? std::to_string(res) : "Doesn’t exist") << '\n';
+            res = empirical_compute_excess(emp.get(), &es);
+            std::cout << "Excess: " << ((es == EMPIRICAL_SUCCESS) ? std::to_string(res) : "Doesn’t exist") << '\n';
+        } 
+        else if (mode == 2) {
+            int count = inputInt("Number of x to generate: ");
+            std::vector<double> results;
+            results.reserve(count);
+            for (int i = 0; i < count; ++i) {
+                double r = empirical_generate_x(emp.get(), &es);
+                if (es != EMPIRICAL_SUCCESS) break;
+                results.push_back(r);
+            }
+            writeToFile("output.txt", results);
+        } 
+        else if (mode == 3) {
+            int count = inputInt("Number of density points: ");
+            double start = inputDouble("Start x: ");
+            double end = inputDouble("End x: ");
+            std::vector<double> results;
+            results.reserve(count);
+            for (int i = 0; i < count; ++i) {
+                double xi = start + (end - start) * i / count;
+                double r = empirical_compute_density(xi, emp.get(), &es);
+                if (es != EMPIRICAL_SUCCESS) break;
+                results.push_back(r);
+            }
+            writeToFile("output.txt", results);
         }
     }
 }
