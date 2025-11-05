@@ -6,8 +6,8 @@ RELEASE_FLAGS=-O2
 TARGET=a.exe
 TEST_TARGET=test.exe
 
-SOURCES=pirson/pirson.cpp pirson/alt_pirson.cpp mixd/mixd.cpp empirical/empirical.cpp
-HEADERS=pirson/pirson.h pirson/alt_pirson.h mixd/mixd.h empirical/empirical.h
+SOURCES=pearson/pearson.cpp mixd/mixd.cpp empirical/empirical.cpp
+HEADERS=pearson/pearson.h mixd/mixd.h empirical/empirical.h
 
 OBJECTS=main.o $(SOURCES:.cpp=.o)
 TEST_OBJECTS=test.o $(SOURCES:.cpp=.o)

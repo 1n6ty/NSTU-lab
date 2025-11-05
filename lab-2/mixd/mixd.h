@@ -11,7 +11,7 @@
 #ifndef MIXD_H
 #define MIXD_H
 
-#include "../pirson/alt_pirson.h"
+#include "../pearson/pearson.h"
 #include <vector>
 #include <stdexcept>
 
@@ -36,7 +36,7 @@ enum Mix_Status {
  * @param   coefficients mix coefficients
  */
 struct Mix_p{
-    std::vector<TransformedPearson> distributions;
+    std::vector<PearsonVII> distributions;
     std::vector<double> coefficients;
 };
 
@@ -49,8 +49,7 @@ struct Mix_p{
  * @param   coefficients mix coefficients
  * @return  pointer to new Mix structure
  */
-Mix_p *new_Mix_p(const std::vector<TransformedPearson>& distributions, 
-                 const std::vector<double>& coefficients);
+Mix_p *new_Mix_p(const std::vector<PearsonVII>& distributions, const std::vector<double>& coefficients);
 
 /**
  * @version 2.0

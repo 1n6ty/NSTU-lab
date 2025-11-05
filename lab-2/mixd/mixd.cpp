@@ -27,7 +27,7 @@
  * @param   coefficients mix coefficients
  * @return  pointer to new Mix structure
  */
-Mix_p *new_Mix_p(const std::vector<TransformedPearson>& distributions, 
+Mix_p *new_Mix_p(const std::vector<PearsonVII>& distributions, 
                  const std::vector<double>& coefficients) {
     
     if (distributions.size() != coefficients.size()) {
@@ -75,15 +75,11 @@ double mix_compute_density(double x, Mix_p *m, Mix_Status *status) {
 
     try {
         double cum_dens = 0;
-        for (size_t i = 0; i < m->distributions.size(); i++) {
-            if (!m->distributions[i].isValid()) {
-                *status = MIX_INVALID_PARAMETER;
-                return -1;
-            }
+        for (size_t i = 0; i < m->distributions.size(); i++){
             cum_dens += m->coefficients[i] * m->distributions[i].computeDensity(x);
         }
         return cum_dens;
-    } catch (const TransformedPearsonException& e) {
+    } catch (const PearsonException& e){
         *status = MIX_INVALID_PARAMETER;
         return -1;
     }
@@ -104,14 +100,10 @@ double mix_compute_mat_expectation(Mix_p *m, Mix_Status *status) {
     try {
         double cum_mat_exp = 0;
         for (size_t i = 0; i < m->distributions.size(); i++) {
-            if (!m->distributions[i].isValid()) {
-                *status = MIX_INVALID_PARAMETER;
-                return -1;
-            }
             cum_mat_exp += m->coefficients[i] * m->distributions[i].computeExpectation();
         }
         return cum_mat_exp;
-    } catch (const TransformedPearsonException& e) {
+    } catch (const PearsonException& e){
         *status = MIX_INVALID_PARAMETER;
         return -1;
     }
@@ -132,10 +124,6 @@ double mix_compute_dispersion(Mix_p *m, Mix_Status *status) {
     try {
         double cum_md = 0;
         for (size_t i = 0; i < m->distributions.size(); i++) {
-            if (!m->distributions[i].isValid()) {
-                *status = MIX_INVALID_PARAMETER;
-                return -1;
-            }
             double expectation = m->distributions[i].computeExpectation();
             double variance = m->distributions[i].computeVariance();
             cum_md += m->coefficients[i] * (expectation * expectation + variance);
@@ -148,7 +136,7 @@ double mix_compute_dispersion(Mix_p *m, Mix_Status *status) {
         
         cum_md -= mix_expectation * mix_expectation;
         return cum_md;
-    } catch (const TransformedPearsonException& e) {
+    } catch (const PearsonException& e){
         *status = MIX_INVALID_PARAMETER;
         return -1;
     }
@@ -178,12 +166,7 @@ double mix_compute_skewness(Mix_p *m, Mix_Status *status) {
         }
         
         double cum_skew = 0;
-        for (size_t i = 0; i < m->distributions.size(); i++) {
-            if (!m->distributions[i].isValid()) {
-                *status = MIX_INVALID_PARAMETER;
-                return -1;
-            }
-            
+        for (size_t i = 0; i < m->distributions.size(); i++){
             double expectation = m->distributions[i].computeExpectation();
             double variance = m->distributions[i].computeVariance();
             double skewness = m->distributions[i].computeSkewness();
@@ -196,7 +179,7 @@ double mix_compute_skewness(Mix_p *m, Mix_Status *status) {
         }
 
         return cum_skew / std::pow(mix_variance, 1.5);
-    } catch (const TransformedPearsonException& e) {
+    } catch (const PearsonException& e) {
         *status = MIX_INVALID_PARAMETER;
         return -1;
     }
@@ -227,11 +210,6 @@ double mix_compute_excess(Mix_p *m, Mix_Status *status) {
         
         double cum_excess = 0;
         for (size_t i = 0; i < m->distributions.size(); i++) {
-            if (!m->distributions[i].isValid()) {
-                *status = MIX_INVALID_PARAMETER;
-                return -1;
-            }
-            
             double expectation = m->distributions[i].computeExpectation();
             double variance = m->distributions[i].computeVariance();
             double skewness = m->distributions[i].computeSkewness();
@@ -246,7 +224,7 @@ double mix_compute_excess(Mix_p *m, Mix_Status *status) {
         }
 
         return cum_excess / std::pow(mix_variance, 2) - 3;
-    } catch (const TransformedPearsonException& e) {
+    } catch (const PearsonException& e){
         *status = MIX_INVALID_PARAMETER;
         return -1;
     }
@@ -273,11 +251,6 @@ double mix_generate_x(Mix_p *m, Mix_Status *status) {
         double cum_p = 0;
         
         for (size_t i = 0; i < m->distributions.size(); i++) {
-            if (!m->distributions[i].isValid()) {
-                *status = MIX_INVALID_PARAMETER;
-                return -1;
-            }
-            
             cum_p += m->coefficients[i];
             if (r <= cum_p + EPS) {
                 return m->distributions[i].generateRandom();
@@ -285,7 +258,7 @@ double mix_generate_x(Mix_p *m, Mix_Status *status) {
         }
         
         return m->distributions.back().generateRandom();
-    } catch (const TransformedPearsonException& e) {
+    } catch (const PearsonException& e) {
         *status = MIX_INVALID_PARAMETER;
         return -1;
     }

@@ -8,7 +8,7 @@
  *          Input/output operations are performed outside class functions.
  */
 
-#include "pirson/alt_pirson.h"
+#include "pearson/pearson.h"
 #include "mixd/mixd.h"
 #include "empirical/empirical.h"
 
@@ -59,7 +59,7 @@ void writeToFile(const std::string &filename, const std::vector<double> &data) {
 }
 
 /** Base Pearson-VII workflow */
-void runBasePearson() {
+void runPearson() {
     double buf;
     std::cout << "\n=== Base Pearson-VII Distribution ===" << std::endl;
     
@@ -73,11 +73,11 @@ void runBasePearson() {
             switch (mode) {
                 case 1: {
                     // Установка параметров
-                    double location = inputDouble("Location parameter: ");
+                    double shift = inputDouble("Shift parameter: ");
                     double scale = inputDouble("Scale parameter: ");
                     double shape = inputDouble("Shape parameter: ");
                     
-                    dist.setParameters(location, scale, shape);
+                    dist = PearsonVII(shift, scale, shape);
                     std::cout << "Parameters set successfully.\n";
                     break;
                 }
@@ -88,9 +88,9 @@ void runBasePearson() {
                     std::cout << "Enter filename: ";
                     std::cin >> filename;
                     
-                    dist.loadFromFile(filename);
+                    dist = PearsonVII(filename);
                     std::cout << "Distribution loaded from file. Parameters: "
-                              << "location=" << dist.getLocation()
+                              << "shift=" << dist.getShift()
                               << ", scale=" << dist.getScale()
                               << ", shape=" << dist.getShape() << std::endl;
                     break;
@@ -98,11 +98,6 @@ void runBasePearson() {
                 
                 case 3: {
                     // Вычисление характеристик
-                    if (!dist.isValid()) {
-                        std::cout << "Distribution parameters are invalid!\n";
-                        break;
-                    }
-                    
                     try {
                         buf = dist.computeExpectation();
 
@@ -140,11 +135,6 @@ void runBasePearson() {
                 
                 case 4: {
                     // Генерация случайных величин
-                    if (!dist.isValid()) {
-                        std::cout << "Distribution parameters are invalid!\n";
-                        break;
-                    }
-                    
                     int count = inputInt("Number of x to generate: ");
                     std::vector<double> results;
                     results.reserve(count);
@@ -159,11 +149,6 @@ void runBasePearson() {
                 
                 case 5: {
                     // Вычисление плотности
-                    if (!dist.isValid()) {
-                        std::cout << "Distribution parameters are invalid!\n";
-                        break;
-                    }
-                    
                     int count = inputInt("Number of density points: ");
                     double start = inputDouble("Start x: ");
                     double end = inputDouble("End x: ");
@@ -204,161 +189,15 @@ void runBasePearson() {
     }
 }
 
-/** Transformed Pearson-VII workflow */
-void runTransformedPearson() {
-    double buf;
-    std::cout << "\n=== Transformed Pearson-VII Distribution ===" << std::endl;
-    
-    try {
-        TransformedPearson dist;
-        
-        while (true) {
-            int mode = inputInt("Choose mode (0-exit, 1-set parameters, 2-load from file, 3-compute characteristics, 4-generate x, 5-compute density, 6-save to file): ", 0, 6);
-            if (mode == 0) break;
-
-            switch (mode) {
-                case 1: {
-                    // Установка параметров
-                    double location = inputDouble("Location parameter: ");
-                    double scale = inputDouble("Scale parameter: ");
-                    double shape = inputDouble("Shape parameter: ");
-                    
-                    dist.setParameters(location, scale, shape);
-                    std::cout << "Parameters set successfully.\n";
-                    break;
-                }
-                
-                case 2: {
-                    // Загрузка из файла
-                    std::string filename;
-                    std::cout << "Enter filename: ";
-                    std::cin >> filename;
-                    
-                    dist.loadFromFile(filename);
-                    std::cout << "Distribution loaded from file. Parameters: "
-                              << "location=" << dist.getLocation()
-                              << ", scale=" << dist.getScale()
-                              << ", shape=" << dist.getShape() << std::endl;
-                    break;
-                }
-                
-                case 3: {
-                    // Вычисление характеристик
-                    if (!dist.isValid()) {
-                        std::cout << "Distribution parameters are invalid!\n";
-                        break;
-                    }
-                    
-                    try {
-                        buf = dist.computeExpectation();
-
-                        std::cout << std::fixed << std::setprecision(6);
-                        std::cout << "Mathematical expectation: " << buf << std::endl;
-                    } catch (const TransformedPearsonException& e) {
-                        std::cout << "Mathematical expectation: " << e.what() << std::endl;
-                    }
-                    
-                    try {
-                        buf = dist.computeVariance();
-
-                        std::cout << "Variance: " << buf << std::endl;
-                    } catch (const TransformedPearsonException& e) {
-                        std::cout << "Variance: " << e.what() << std::endl;
-                    }
-                    
-                    try {
-                        buf = dist.computeSkewness();
-
-                        std::cout << "Skewness: " << buf << std::endl;
-                    } catch (const TransformedPearsonException& e) {
-                        std::cout << "Skewness: " << e.what() << std::endl;
-                    }
-                    
-                    try {
-                        buf = dist.computeKurtosis();
-
-                        std::cout << "Kurtosis: " << buf << std::endl;
-                    } catch (const TransformedPearsonException& e) {
-                        std::cout << "Kurtosis: " << e.what() << std::endl;
-                    }
-                    break;
-                }
-                
-                case 4: {
-                    // Генерация случайных величин
-                    if (!dist.isValid()) {
-                        std::cout << "Distribution parameters are invalid!\n";
-                        break;
-                    }
-                    
-                    int count = inputInt("Number of x to generate: ");
-                    std::vector<double> results;
-                    results.reserve(count);
-                    
-                    for (int i = 0; i < count; ++i) {
-                        results.push_back(dist.generateRandom());
-                    }
-                    
-                    writeToFile("transformed_pearson_output.txt", results);
-                    break;
-                }
-                
-                case 5: {
-                    // Вычисление плотности
-                    if (!dist.isValid()) {
-                        std::cout << "Distribution parameters are invalid!\n";
-                        break;
-                    }
-                    
-                    int count = inputInt("Number of density points: ");
-                    double start = inputDouble("Start x: ");
-                    double end = inputDouble("End x: ");
-                    
-                    std::vector<double> results;
-                    results.reserve(count);
-                    
-                    for (int i = 0; i < count; ++i) {
-                        double x = start + (end - start) * i / (count - 1);
-                        try {
-                            double density = dist.computeDensity(x);
-                            results.push_back(density);
-                        } catch (const TransformedPearsonException& e) {
-                            std::cout << "Error computing density at x=" << x << ": " << e.what() << std::endl;
-                            results.push_back(0.0);
-                        }
-                    }
-                    
-                    writeToFile("transformed_pearson_density.txt", results);
-                    break;
-                }
-                
-                case 6: {
-                    // Сохранение в файл
-                    std::string filename;
-                    std::cout << "Enter filename: ";
-                    std::cin >> filename;
-                    
-                    dist.saveToFile(filename);
-                    std::cout << "Distribution saved to file.\n";
-                    break;
-                }
-            }
-        }
-        
-    } catch (const TransformedPearsonException& e) {
-        std::cerr << "Transformed Pearson-VII Error: " << e.what() << std::endl;
-    }
-}
-
 /** Mix workflow */
 void runMix() {
     std::cout << "\n=== Mix Distribution ===" << std::endl;
     
     try {
         // Создаем смесь из двух распределений
-        std::vector<TransformedPearson> distributions = {
-            TransformedPearson(0.0, 1.0, 2.0),
-            TransformedPearson(3.0, 1.0, 2.0)
+        std::vector<PearsonVII> distributions = {
+            PearsonVII(),
+            PearsonVII()
         };
         std::vector<double> coefficients = {0.5, 0.5};
         
@@ -377,12 +216,12 @@ void runMix() {
             // Ввод параметров для каждого распределения в смеси
             for (size_t i = 0; i < mix->distributions.size(); ++i) {
                 std::cout << "\nMix: Input parameters for distribution " << (i + 1) << '\n';
-                double location = inputDouble("Location parameter: ");
+                double shift = inputDouble("Shift parameter: ");
                 double scale = inputDouble("Scale parameter: ");
                 double shape = inputDouble("Shape parameter: ");
                 double coef = inputDouble("Partial coefficient: ");
                 
-                mix->distributions[i].setParameters(location, scale, shape);
+                mix->distributions[i] = PearsonVII(shift, scale, shape);
                 mix->coefficients[i] = coef;
             }
 
@@ -508,8 +347,7 @@ int main() {
         if (mode == 0) break;
         
         switch (mode) {
-            case 1: runBasePearson(); break;
-            case 2: runTransformedPearson(); break;
+            case 1: runPearson(); break;
             case 3: runMix(); break;
             case 4: runEmpirical(); break;
         }
