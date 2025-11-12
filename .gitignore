@@ -3,4 +3,5 @@
 .venv
 *.exe
 .vscode
+.vs
 node_modules
