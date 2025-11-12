@@ -343,13 +343,13 @@ int main() {
     std::cout << "=============================================" << std::endl;
     
     while (true) {
-        int mode = inputInt("\nMain menu: (0-exit, 1-Base Pearson, 2-Transformed Pearson, 3-Mix, 4-Empirical): ", 0, 4);
+        int mode = inputInt("\nMain menu: (0-exit, 1-Base Pearson, 2-Mix, 3-Empirical): ", 0, 4);
         if (mode == 0) break;
         
         switch (mode) {
             case 1: runPearson(); break;
-            case 3: runMix(); break;
-            case 4: runEmpirical(); break;
+            case 2: runMix(); break;
+            case 3: runEmpirical(); break;
         }
     }
     
