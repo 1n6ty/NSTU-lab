@@ -7,15 +7,15 @@
 
 bool emptyMac(char* MAC)
 {
-    for (int i = 0; i < 5; i++)
+    for (int i = 0; i < 6; i++)
         if (MAC[i] != 0)
             return false;
     return true;
 }
 
-int main()  // Changed from void main() to int main()
+int main()
 {
-    //Файла с входными данными
+    //Файл с входными данными
     FILE* ethers = NULL;
 
     // имя файла
