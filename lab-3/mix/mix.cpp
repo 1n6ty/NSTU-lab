@@ -67,8 +67,8 @@ Mix::Mix(const std::string& filename) {
  * 
  * @brief   Getters.
  */
-const PearsonVII& Mix::getFstComponent() const { return this->d1; };
-const PearsonVII& Mix::getSecComponent() const { return this->d2; };
+PearsonVII& Mix::getFstComponent() { return this->d1; };
+PearsonVII& Mix::getSecComponent() { return this->d2; };
 double Mix::getP() const { return this->p; };
 
 /**

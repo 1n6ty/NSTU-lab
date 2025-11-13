@@ -88,6 +88,15 @@ double PearsonVII::getShape() const { return this->shape; }
 /**
  * @version 1.0
  * 
+ * @brief   Setters.
+ */
+void PearsonVII::setShift(double const shift) { this->shift = shift; }
+void PearsonVII::setScale(double const scale) { this->scale = (scale > 0) ? scale: throw PearsonException("Invalid parameters for pearson distribution: scale must be > 0."); }
+void PearsonVII::setShape(double const shape) { this->shape = (shape > 0.5) ? shape: throw PearsonException("Invalid parameters for pearson distribution: shape must be > 0.5."); }
+
+/**
+ * @version 1.0
+ * 
  * @brief   Computes density of pearson-VII distribution.
  * 
  * @param   x point at which the density will be computed

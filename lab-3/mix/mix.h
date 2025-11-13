@@ -24,8 +24,8 @@ public:
     Mix(const PearsonVII& d1, const PearsonVII& d2, const double p);
     Mix(const std::string& filename);
     
-    const PearsonVII& getFstComponent() const;
-    const PearsonVII& getSecComponent() const;
+    PearsonVII& getFstComponent();
+    PearsonVII& getSecComponent();
     double getP() const;
     
     double computeDensity(const double x) const;

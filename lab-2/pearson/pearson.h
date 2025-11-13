@@ -26,7 +26,7 @@ private:
 public:
     PearsonVII(double shift = 0.0, double scale = 1.0, double shape = 2.0);
     PearsonVII(const std::string& filename);
-    
+
     double getShift() const;
     double getScale() const; 
     double getShape() const;
