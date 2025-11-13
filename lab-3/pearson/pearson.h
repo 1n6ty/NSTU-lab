@@ -27,9 +27,9 @@ public:
     PearsonVII(double shift = 0.0, double scale = 1.0, double shape = 2.0);
     PearsonVII(const std::string& filename);
     
-    void PearsonVII::setShift(double const shift);
-    void PearsonVII::setScale(double const scale);
-    void PearsonVII::setShape(double const shape);
+    void setShift(double const shift);
+    void setScale(double const scale);
+    void setShape(double const shape);
 
     double getShift() const;
     double getScale() const; 
