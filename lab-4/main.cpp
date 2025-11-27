@@ -688,7 +688,7 @@ int main() {
     std::cout << "=============================================" << std::endl;
 
     while (true) {
-        int mode = inputInt("\nMain menu: (0-exit, 1-Base Pearson, 2-Mix<P, P>, 3-Mix<P, E>, 4-Mix<P, Mix<P, P>>, 5-Empirical, 6-Copy Test): ", 0, 4);
+        int mode = inputInt("\nMain menu: (0-exit, 1-Base Pearson, 2-Mix<P, P>, 3-Mix<P, E>, 4-Mix<P, Mix<P, P>>, 5-Empirical, 6-Copy Test): ", 0, 6);
         if (mode == 0) break;
 
         switch (mode) {
