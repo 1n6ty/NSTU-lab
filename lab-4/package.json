@@ -1,0 +1,21 @@
+{
+  "name": "telegram-task-manager-bot",
+  "version": "1.0.0",
+  "description": "Telegram бот для управления задачами",
+  "main": "bot.js",
+  "scripts": {
+    "start": "node bot.js",
+    "dev": "node bot.js"
+  },
+  "dependencies": {
+    "node-telegram-bot-api": "^0.66.0",
+    "sqlite": "^5.1.1",
+    "sqlite3": "^5.1.7"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "keywords": ["telegram", "bot", "task", "manager"],
+  "author": "Your Name",
+  "license": "MIT"
+}
