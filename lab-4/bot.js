@@ -7,7 +7,7 @@ const keyboards = require('./keyboard');
 // Инициализация бота
 const token = process.env.BOT_TOKEN;
 if (!token) {
-    console.error('❌ BOT_TOKEN не найден в .env файле!');
+    console.error('BOT_TOKEN не найден в .env файле!');
     process.exit(1);
 }
 
@@ -16,8 +16,8 @@ const bot = new TelegramBot(token, { polling: true });
 // Основная функция
 async function main() {
     const db = await dbModule.initDb();
-    console.log('🤖 Бот запущен...');
-    console.log('🗄️  База данных инициализирована');
+    console.log('Бот запущен...');
+    console.log('База данных инициализирована');
 
     // Обработчик команды /start
     bot.onText(/\/start/, async (msg) => {
@@ -104,13 +104,13 @@ async function main() {
 
     // Обработка завершения работы
     process.on('SIGINT', async () => {
-        console.log('🤖 Завершение работы...');
+        console.log('Завершение работы...');
         await db.close();
         process.exit(0);
     });
 
     process.on('SIGTERM', async () => {
-        console.log('🤖 Получен сигнал завершения...');
+        console.log('Получен сигнал завершения...');
         await db.close();
         process.exit(0);
     });
