@@ -1,0 +1,123 @@
+<!-- public/index.html -->
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Морской бой</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>⚔️ Морской бой</h1>
+      <div id="room-info" class="hidden">
+        <span>Комната: <span id="room-id-display"></span></span>
+        <span id="player-indicator"></span>
+      </div>
+    </header>
+
+    <main>
+      <!-- Начальный экран -->
+      <div id="start-screen" class="screen">
+        <div class="card">
+          <h2>Создайте или присоединитесь к игре</h2>
+          <div class="button-group">
+            <button id="create-room-btn" class="btn primary">Создать комнату</button>
+            <div class="input-group">
+              <input type="text" id="room-id-input" placeholder="ID комнаты">
+              <button id="join-room-btn" class="btn secondary">Присоединиться</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Экран ожидания -->
+      <div id="waiting-screen" class="screen hidden">
+        <div class="card">
+          <h2>Ожидание второго игрока</h2>
+          <div class="loader"></div>
+          <p id="waiting-message">Поделитесь ID комнаты с другом: <span id="current-room-id"></span></p>
+          <button id="copy-room-id" class="btn secondary">Копировать ID</button>
+        </div>
+      </div>
+
+      <!-- Экран расстановки кораблей -->
+      <div id="placement-screen" class="screen hidden">
+        <div class="game-container">
+          <div class="info-panel">
+            <h2>Расставьте свои корабли</h2>
+            <div class="ships-guide">
+              <div class="ship-guide">
+                <div class="ship ship-4"></div>
+                <span>1 корабль на 4 клетки</span>
+              </div>
+              <div class="ship-guide">
+                <div class="ship ship-3"></div>
+                <span>2 корабля на 3 клетки</span>
+              </div>
+              <div class="ship-guide">
+                <div class="ship ship-2"></div>
+                <span>3 корабля на 2 клетки</span>
+              </div>
+              <div class="ship-guide">
+                <div class="ship ship-1"></div>
+                <span>4 корабля на 1 клетку</span>
+              </div>
+            </div>
+            <div class="controls">
+              <button id="rotate-btn" class="btn secondary">↺ Повернуть корабль</button>
+              <button id="random-place-btn" class="btn secondary">Автоматически</button>
+              <button id="done-placement-btn" class="btn primary disabled" disabled>Готово</button>
+            </div>
+          </div>
+          <div class="board-container">
+            <div id="placement-board" class="board"></div>
+            <div class="board-label">Ваше поле</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Игровой экран -->
+      <div id="game-screen" class="screen hidden">
+        <div class="game-container">
+          <div class="chat-panel">
+            <div class="chat-header">
+              <h3>Чат</h3>
+              <button id="toggle-chat-btn">Скрыть</button>
+            </div>
+            <div id="chat-messages" class="chat-messages"></div>
+            <div class="chat-input">
+              <input type="text" id="chat-input" placeholder="Введите сообщение...">
+              <button id="send-chat-btn">Отправить</button>
+            </div>
+          </div>
+          
+          <div class="boards-container">
+            <div class="board-wrapper">
+              <div class="board-label">Ваше поле</div>
+              <div id="my-board" class="board player-board"></div>
+            </div>
+            <div class="board-wrapper">
+              <div class="board-label">Поле противника</div>
+              <div id="enemy-board" class="board enemy-board"></div>
+            </div>
+          </div>
+          
+          <div class="game-info">
+            <div>
+                <div id="game-status">Ваш ход</div>
+                <div class="button-group">
+                    <button id="restart-btn" class="btn secondary hidden">Новая игра</button>
+                    <button id="leave-btn" class="btn danger">Покинуть игру</button>
+                </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
