@@ -3,3 +3,6 @@
 *.exe
 .vscode
 node_modules
+lab-4/.env
+lab-4/example.env
+lab-4/tasks.db
