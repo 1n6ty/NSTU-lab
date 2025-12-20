@@ -694,7 +694,12 @@ void testEstimate() {
     double true_scale = inputDouble("Enter True Scale: ");
     double true_shape = 100.0; 
     
-    PearsonVII idealDist(true_loc, true_scale, true_shape);
+    PearsonVII idealDist;
+    try {
+        idealDist = PearsonVII(true_loc, true_scale, true_shape);
+    } catch (const std::exception& e) {
+        std::cerr << "Exception during testing Estimate: " << e.what() << std::endl;
+    }
     
     // 2. Генерация чистой выборки [cite: 9]
     std::cout << "Generating ideal sample (n=" << n << ")...\n";
@@ -705,6 +710,7 @@ void testEstimate() {
     double param_c = inputDouble("Enter parameter 'c' for loss function (e.g., 2.0): ");
     
     // Создаем объект оценки, связываем с данными (dataObj)
+    
     Estimate estimator(dataObj, true_scale, param_c, 100);
 
     // Вывод результатов на чистых данных [cite: 10]
