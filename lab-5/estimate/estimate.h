@@ -1,3 +1,12 @@
+/**
+ * @file    estimate.h
+ * @version 1.0
+ *
+ * @section DESCRIPTION
+ *
+ *          Header file for estimate class.
+ */
+
 #pragma once
 
 #include "../empirical/empirical.h"

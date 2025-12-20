@@ -684,7 +684,7 @@ void testEmpiricalCopyConstructor() {
     }
 }
 
-
+/** Estimate workflow */
 void testEstimate() {
     std::cout << "=== Lab 5: Aggregation by Reference & Robust Estimation ===\n";
 
@@ -701,7 +701,6 @@ void testEstimate() {
         std::cerr << "Exception during testing Estimate: " << e.what() << std::endl;
     }
     
-    // 2. Генерация чистой выборки [cite: 9]
     std::cout << "Generating ideal sample (n=" << n << ")...\n";
     Empirical dataObj(idealDist, static_cast<size_t>(n));
 
@@ -709,21 +708,16 @@ void testEstimate() {
 
     double param_c = inputDouble("Enter parameter 'c' for loss function (e.g., 2.0): ");
     
-    // Создаем объект оценки, связываем с данными (dataObj)
-    
     Estimate estimator(dataObj, true_scale, param_c, 100);
 
-    // Вывод результатов на чистых данных [cite: 10]
     std::cout << "\n--- Clean Data Results ---\n";
     std::cout << "True Location: " << true_loc << "\n";
     std::cout << "Arithmetic Mean: " << dataObj.computeExpectation() << "\n";
     std::cout << "Robust Estimate: " << estimator.getMu() << "\n";
 
-    // 4. Засорение данных (Атака) [cite: 8, 11]
     double contamination_fraction = inputDouble("Enter contamination fraction p (0.1 - 0.4): ");
     double contamination_shift = inputDouble("Enter shift for contaminating distribution (e.g., 5.0): ");
     
-    // Засоряющее распределение (сдвинутое)
     PearsonVII poisonDist(contamination_shift, true_scale, true_shape);
     
     Empirical(poisonDist, n).saveToFile("poisoning_data");
@@ -731,7 +725,6 @@ void testEstimate() {
     int n_poison = static_cast<int>(n * contamination_fraction);
     std::cout << "\nPoisoning " << n_poison << " observations...\n";
 
-    // "Отравление" данных: заменяем первые n_poison элементов
     double *data = const_cast<double *>(dataObj.getSample());
     for (int i = 0; i < n_poison; ++i) {
         double bad_value = poisonDist.generateRandom();
@@ -740,11 +733,9 @@ void testEstimate() {
 
     Empirical(data, n).saveToFile("poisoned_data");
 
-    // 5. Уведомление наблюдателей 
     std::cout << "Data changed. Calling notify()...\n";
     dataObj.notify();
 
-    // 6. Сравнение результатов [cite: 12]
     double mean_poisoned = dataObj.computeExpectation();
     double robust_poisoned = estimator.getMu();
 

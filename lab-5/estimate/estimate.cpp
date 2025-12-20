@@ -1,3 +1,12 @@
+/**
+ * @file    estimate.cpp
+ * @version 2.0
+ *
+ * @section DESCRIPTION
+ *
+ *          Implementation of Estimate class.
+ */
+
 #include <cmath>
 #include <algorithm>
 #include <vector>
@@ -9,9 +18,17 @@
 #include "../core/interface.h"
 #include "estimate.h"
 
+/// Convergence threshold for the iterative process
 #define TOL 1e-4
+/// Maximum number of iterations for a single initial guess
 #define MAX_ITER 200
 
+/**
+ * @brief Computes the value of the loss function (rho-function).
+ * 
+ * @param x Standardized residual (z = (data - mu) / sigma).
+ * @return The value of the loss function at point @ref x.
+ */
 double Estimate::rho(double x) const {
     const double x_sq = x * x;
 
@@ -21,6 +38,14 @@ double Estimate::rho(double x) const {
     return -1. / denominator - std::log(denominator);
 }
 
+/**
+ * @brief Computes the value of the weight function w(z).
+ * 
+ * @details The weight function is used to reweight data points during the iterative process.
+ * 
+ * @param x Standardized residual (z = (data - mu) / sigma).
+ * @return The weight value at point @ref x.
+ */
 double Estimate::weight(double x) {
     const double x_sq = x * x;
 
@@ -28,6 +53,9 @@ double Estimate::weight(double x) {
     return std::exp(-x_sq / 2.0) / (denominator * denominator);
 }
 
+/**
+ * @brief Main algorithm to find the robust estimate of the location parameter (mu).
+ */
 void Estimate::estimate() {
     const double* data = e.getSample();
     size_t n = e.getSize();
@@ -88,6 +116,15 @@ void Estimate::estimate() {
     this->mu = best_mu;
 }
 
+/**
+ * @brief Constructor for the Estimate class.
+ * 
+ * @param e0 Reference to the empirical distribution (data object).
+ * @param sigma0 Scale parameter (standard deviation).
+ * @param c0 Parameter for the compromise function (must be > -1).
+ * @param p0 Number of initial guesses for global optimization.
+ * @throw std::invalid_argument If parameters c or p are invalid.
+ */
 Estimate::Estimate(Empirical& e0, double sigma0,  double c0, int p0) :
     e(e0), sigma(sigma0), c(c0), p(p0)
 {
@@ -98,6 +135,7 @@ Estimate::Estimate(Empirical& e0, double sigma0,  double c0, int p0) :
     e.attach(this);
 }
 
+/// Setters
 void Estimate::setSigma(double new_sigma) {
     if (new_sigma <= 1e-15) throw std::invalid_argument("Sigma must be positive");
     this->sigma = new_sigma;

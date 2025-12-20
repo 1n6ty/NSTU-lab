@@ -1,5 +1,5 @@
 /**
- * @file    mix.cpp
+ * @file    mix.tpp
  * @version 2.0
  *
  * @section DESCRIPTION
