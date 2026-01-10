@@ -8,7 +8,7 @@ std::vector<std::complex<double>> FT::DFT(const std::vector<std::complex<double>
     const std::complex<double> im(0., 1.);
 
     std::vector<std::complex<double>> result;
-    
+
     std::complex<double> sum = 0., angle;
     for(size_t m = 0; m < N; m++){
         for(size_t i = 0; i < N; i++){
@@ -27,7 +27,7 @@ std::vector<std::complex<double>> FT::IDFT(const std::vector<std::complex<double
     const std::complex<double> im(0., 1.);
 
     std::vector<std::complex<double>> result;
-    
+
     std::complex<double> sum = 0., angle;
     for(size_t m = 0; m < N; m++){
         for(size_t i = 0; i < N; i++){
@@ -41,35 +41,38 @@ std::vector<std::complex<double>> FT::IDFT(const std::vector<std::complex<double
     return result;
 }
 
-std::vector<std::complex<double>> FT::FFT(const std::vector<std::complex<double>> &signal){
+void bit_reverse(std::vector<std::complex<double>>& a) {
+    size_t n = a.size();
+    for (size_t i = 1, j = 0; i < n; i++) {
+        size_t bit = n >> 1;
+        for(; j & bit; bit >>= 1) j ^= bit;
+        j ^= bit;
+        if(i < j) std::swap(a[i], a[j]);
+    }
+}
+
+//Cooley-Tukey algorithm
+std::vector<std::complex<double>> FT::FFT(const std::vector<std::complex<double>> &signal) {
     size_t N = signal.size();
 
-    std::vector<std::complex<double>> u, v;
-    if(N % 2 == 0){
-        for(size_t i = 0; i < N / 2; i++){
-            u.push_back(signal[2 * i]);
-            v.push_back(signal[2 * i + 1]);
+    std::vector<std::complex<double>> result(signal);
+    bit_reverse(result);
+
+    for(size_t len = 2; len <= N; len <<= 1){
+        double ang = 2 * M_PI / len * -1;
+        std::complex<double> wlen(std::cos(ang), std::sin(ang));
+
+        for(size_t i = 0; i < N; i += len){
+            std::complex<double> w(1);
+            for(size_t j = 0; j < len / 2; j++){
+                std::complex<double> u = result[i + j], v = result[i + j + len / 2] * w;
+
+                result[i + j] = u + v;
+                result[i + j + len / 2] = u - v;
+                w *= wlen;
+            }
         }
-        u = FFT(u);
-        v = FFT(v);
-    } else {
-        return FT::DFT(signal);
     }
-
-    const std::complex<double> im(0., 1.);
-
-    std::vector<std::complex<double>> result;
-    
-    std::complex<double> angle;
-    for(size_t m = 0; m < N / 2; m++){
-        angle = -2. * M_PI * static_cast<double>(m) / N;
-        result.push_back(u[m] + std::exp(angle * im) * v[m]);
-    }
-    for(size_t m = 0; m < N / 2; m++){
-        angle = -2. * M_PI * static_cast<double>(m) / N;
-        result.push_back(u[m] - std::exp(angle * im) * v[m]);
-    }
-
     return result;
 }
 
