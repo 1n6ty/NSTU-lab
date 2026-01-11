@@ -127,73 +127,122 @@ std::vector<std::complex<double>> get_P(const std::vector<std::complex<double>>&
     return sum;
 }
 
+std::vector<std::complex<double>> get_P(const std::vector<std::complex<double>>& signal, const std::pair<std::vector<std::complex<double>>, std::vector<std::complex<double>>>& coefs, const std::vector<std::complex<double>>& u_tr, const std::vector<std::complex<double>>& v_tr, size_t j, const std::vector<std::complex<double>>& prev_P){
+    size_t N = signal.size();
+
+    std::vector<std::complex<double>> sum = prev_P;
+    for(size_t i = 0; i < (N / (1 << j)); i++){
+        std::vector<std::complex<double>> psi = Wavelet::psi(u_tr, v_tr, j, i);
+        for(size_t n = 0; n < psi.size(); n++){
+            sum[n] += psi[n] * coefs.second[i];
+        }
+    }
+
+    return sum;
+}
+
 void process_wavelet(std::string name, std::pair<std::vector<std::complex<double>>, std::vector<std::complex<double>>> (*filter_func)(size_t), const std::vector<std::complex<double>>& signal, size_t N){
     auto filters = filter_func(N);
     auto u_tr = FT::FFT(filters.first);
     auto v_tr = FT::FFT(filters.second);
 
     auto coefs1 = Wavelet::coefs(signal, u_tr, v_tr, 1);
-    auto P1 = get_P(signal, coefs1, u_tr, v_tr, 1);
     auto coefs2 = Wavelet::coefs(signal, u_tr, v_tr, 2);
-    auto P2 = get_P(signal, coefs2, u_tr, v_tr, 2);
     auto coefs3 = Wavelet::coefs(signal, u_tr, v_tr, 3);
-    auto P3 = get_P(signal, coefs3, u_tr, v_tr, 3);
     auto coefs4 = Wavelet::coefs(signal, u_tr, v_tr, 4);
-    auto P4 = get_P(signal, coefs4, u_tr, v_tr, 4);
+
+    auto P3 = get_P(signal, coefs4, u_tr, v_tr, 4);
+    auto P2 = get_P(signal, coefs3, u_tr, v_tr, 3, P3);
+    auto P1 = get_P(signal, coefs2, u_tr, v_tr, 2, P2);
+    auto P0 = get_P(signal, coefs1, u_tr, v_tr, 1, P1);
 
     std::ofstream f3_1(name + "_task3_phi4.txt");
     f3_1 << "phi4\n";
-    for(size_t i = 0; i < coefs4.first.size(); ++i){
+    for(size_t i = 0; i < coefs4.first.size(); i++){
         f3_1 << coefs4.first[i].real() << "\n";
     }
     f3_1.close();
 
     std::ofstream f3_2(name + "_task3_psi4.txt");
     f3_2 << "psi4\n";
-    for(size_t i = 0; i < coefs4.second.size(); ++i){
+    for(size_t i = 0; i < coefs4.second.size(); i++){
         f3_2 << coefs4.second[i].real() << "\n";
     }
     f3_2.close();
 
     std::ofstream f3_3(name + "_task3_psi3.txt");
     f3_3 << "psi3\n";
-    for(size_t i = 0; i < coefs3.second.size(); ++i){
+    for(size_t i = 0; i < coefs3.second.size(); i++){
         f3_3 << coefs3.second[i].real() << "\n";
     }
     f3_3.close();
 
     std::ofstream f3_4(name + "_task3_psi2.txt");
     f3_4 << "psi2\n";
-    for(size_t i = 0; i < coefs2.second.size(); ++i){
+    for(size_t i = 0; i < coefs2.second.size(); i++){
         f3_4 << coefs2.second[i].real() << "\n";
     }
     f3_4.close();
 
     std::ofstream f3_5(name + "_task3_psi1.txt");
     f3_5 << "psi1\n";
-    for(size_t i = 0; i < coefs1.second.size(); ++i){
+    for(size_t i = 0; i < coefs1.second.size(); i++){
         f3_5 << coefs1.second[i].real() << "\n";
     }
     f3_5.close();
 
     std::ofstream f4(name + "_task4.txt");
-    f4 << "P1 P2 P3\n";
-    for(size_t i = 0; i < N; ++i){
+    f4 << "P-1 P-2 P-3\n";
+    for(size_t i = 0; i < N; i++){
         f4 << P1[i].real() << " " 
            << P2[i].real() << " "
            << P3[i].real() << "\n";
     }
     f4.close();
 
-    coefs2.second = std::vector<std::complex<double>>(coefs2.second.size(), 0);
-    P2 = get_P(signal, coefs2, u_tr, v_tr, 2);
+    auto coefs2_copy = coefs2;
+    coefs2_copy.second = std::vector<std::complex<double>>(coefs2.second.size(), 0);
+    P1 = get_P(signal, coefs2_copy, u_tr, v_tr, 2, P2);
 
     std::ofstream f5(name + "_task5.txt");
-    f5 << "P1 filtered\n";
-    for (size_t i = 0; i < P2.size(); ++i) {
-        f5 << P2[i].real() << "\n";
+    f5 << "P-1 filtered\n";
+    
+    for (size_t i = 0; i < P1.size(); i++) {
+        f5 << P1[i].real() << "\n";
     }
     f5.close();
+
+    if(name == "d6_m"){
+        auto coefs5 = Wavelet::coefs(signal, u_tr, v_tr, 5);
+        auto coefs6 = Wavelet::coefs(signal, u_tr, v_tr, 6);
+        auto coefs7 = Wavelet::coefs(signal, u_tr, v_tr, 7);
+        auto coefs8 = Wavelet::coefs(signal, u_tr, v_tr, 8);
+
+        coefs1.second = std::vector<std::complex<double>>(coefs1.second.size(), 0);
+        coefs2.second = std::vector<std::complex<double>>(coefs2.second.size(), 0);
+        coefs3.second = std::vector<std::complex<double>>(coefs3.second.size(), 0);
+        coefs4.second = std::vector<std::complex<double>>(coefs4.second.size(), 0);
+        coefs5.second = std::vector<std::complex<double>>(coefs5.second.size(), 0);
+        coefs6.second = std::vector<std::complex<double>>(coefs6.second.size(), 0);
+        coefs7.second = std::vector<std::complex<double>>(coefs7.second.size(), 0);
+        coefs8.second = std::vector<std::complex<double>>(coefs8.second.size(), 0);
+
+        P3 = get_P(signal, coefs4, u_tr, v_tr, 4);
+        P2 = get_P(signal, coefs3, u_tr, v_tr, 3);
+        P1 = get_P(signal, coefs2, u_tr, v_tr, 2);
+        P0 = get_P(signal, coefs1, u_tr, v_tr, 1);
+        auto P4 = get_P(signal, coefs5, u_tr, v_tr, 5);
+        auto P5 = get_P(signal, coefs6, u_tr, v_tr, 6);
+        auto P6 = get_P(signal, coefs7, u_tr, v_tr, 7);
+        auto P7 = get_P(signal, coefs8, u_tr, v_tr, 8);
+
+        std::ofstream f7(name + "_task7.txt");
+        f7 << "P-0 P-1 P-2 P-3 P-4 P-5 P-6 P-7\n";
+        for (size_t i = 0; i < P3.size(); i++) {
+            f7 << P0[i].real() << " " << P1[i].real() << " " << P2[i].real() << " " << P3[i].real() << " " << P4[i].real() << " " << P5[i].real() << " " << P6[i].real() << " " << P7[i].real() << "\n";
+        }
+        f7.close();
+    }
 }
 
 int main() {
