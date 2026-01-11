@@ -212,7 +212,7 @@ void process_wavelet(std::string name, std::pair<std::vector<std::complex<double
     }
     f5.close();
 
-    if(name == "d6_m"){
+    if(name == "d6_m" || name == "shannon_m"){
         auto coefs5 = Wavelet::coefs(signal, u_tr, v_tr, 5);
         auto coefs6 = Wavelet::coefs(signal, u_tr, v_tr, 6);
         auto coefs7 = Wavelet::coefs(signal, u_tr, v_tr, 7);
