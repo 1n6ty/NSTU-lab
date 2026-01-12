@@ -34,12 +34,8 @@ void rk4_step(const LotkaVolterra& lv, double& x, double& y, double h) {
     y += (h / 6.0) * (k1y + 2.0 * k2y + 2.0 * k3y + k4y);
 }
 
-int main(){
-    double alpha = 0.3, beta  = 0.015, gamma = 0.6, delta = 0.01;
-
-    double x0 = 70.0, y0 = 10.0, T = 365.0, h = 1.0;
+void life(std::string name, double alpha, const double beta, const double gamma, const double delta, const double x0, const double y0, const double T, const double h){
     int steps = static_cast<int>(T / h);
-
     LotkaVolterra lv(alpha, beta, gamma, delta);
     std::vector<double> t_vals, x_vals, y_vals, x1_vals, y1_vals;
     double t = 0.0, x = x0, y = y0, x1 = x0, y1 = y0;
@@ -47,6 +43,8 @@ int main(){
     t_vals.push_back(t);
     x_vals.push_back(x);
     y_vals.push_back(y);
+    x1_vals.push_back(x1);
+    y1_vals.push_back(y1);
 
     for(size_t i = 0; i < steps; i++){
         rk4_step(lv, x, y, h);
@@ -59,12 +57,19 @@ int main(){
         y1_vals.push_back(y1);
     }
 
-    std::ofstream file("lotka_volterra.txt");
+    std::ofstream file(name + ".txt");
     file << "t x y x1 y1\n";
     for(size_t i = 0; i < t_vals.size(); i++){
         file << std::fixed << std::setprecision(6)
-             << t_vals[i] << " " << x_vals[i] << " " << y_vals[i] << "\n";
+             << t_vals[i] << " " << x_vals[i] << " " << y_vals[i] << " " << x1_vals[i] << " " << y1_vals[i] << "\n";
     }
     file.close();
+}
+
+int main(){
+    life("wolf_more_than_rabbit", 0.4, 0.08, 0.5, 0.025, 20, 10, 365, 1.0);
+    life("rabbit_more_than_wolf", 0.4, 0.08, 0.5, 0.025, 40, 5, 365, 1.0);
+    life("didinium_more_than_paramecium_caudatum", 4.0, 0.8, 2.0, 0.2, 10, 8, 20, 0.01);
+    life("paramecium_caudatum_more_than_didinium", 4.0, 0.8, 2.0, 0.2, 20, 5, 20, 0.01);
     return 0;
 }
