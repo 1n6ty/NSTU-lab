@@ -69,7 +69,7 @@ void life(std::string name, double alpha, const double beta, const double gamma,
 int main(){
     life("wolf_more_than_rabbit", 0.4, 0.08, 0.5, 0.025, 20, 10, 365, 1.0);
     life("rabbit_more_than_wolf", 0.4, 0.08, 0.5, 0.025, 40, 5, 365, 1.0);
-    life("didinium_more_than_paramecium_caudatum", 4.0, 0.8, 2.0, 0.2, 10, 8, 20, 0.01);
+    life("didinium_more_than_paramecium_caudatum", 4.0, 0.8, 2.0, 0.2, 5, 20, 20, 0.01);
     life("paramecium_caudatum_more_than_didinium", 4.0, 0.8, 2.0, 0.2, 20, 5, 20, 0.01);
     return 0;
 }
