@@ -15,49 +15,15 @@ double rosenbrockFunc(const std::vector<double>& x) {
     return 100.0 * std::pow(x[1] - x[0] * x[0], 2) + std::pow(1.0 - x[0], 2);
 }
 
-// Golden-Ratio One-Dimensional Search with Dynamic Interval Expansion
+// Golden-Ratio One-Dimensional Search
 double lineSearch(const std::vector<double>& x0, const std::vector<double>& dir, Func f, double eps_1d) {
-    double a = 0.0, b = 1.0, phi = (1.0 + std::sqrt(5.0)) / 2.0;
+    double a = -10.0, b = 10.0, phi = (1.0 + std::sqrt(5.0)) / 2.0;
     
     auto f_lambda = [&](double lambda) {
         std::vector<double> x = x0;
         for (size_t i = 0; i < x.size(); ++i) x[i] += lambda * dir[i];
         return f(x);
     };
-    
-    // Expand interval if minimum is not inside
-    double fa = f_lambda(a), fb = f_lambda(b);
-    
-    while (fb < fa) {
-        a = b;
-        fa = fb;
-        b *= 2.0;
-        fb = f_lambda(b);
-        
-        // To prevent infinite expansion
-        if (b > 1e6) {
-            break;
-        }
-    }
-    if (fb > fa && a == 0.0) {
-        b = -1.0;
-        fb = f_lambda(b);
-        while (fb < fa) {
-            a = b;
-            fa = fb;
-            b *= 2.0;
-            fb = f_lambda(b);
-            
-            if (std::abs(b) > 1e6) {
-                break;
-            }
-        }
-        // Ensure a < b
-        if (a > b) {
-            std::swap(a, b);
-            std::swap(fa, fb);
-        }
-    }
     
     double x1 = b - (b - a) / phi, x2 = a + (b - a) / phi;
     double f1 = f_lambda(x1), f2 = f_lambda(x2);
@@ -95,11 +61,13 @@ std::vector<double> methodGauss(std::vector<double> x0, Func f, double eps, doub
             for (int j = 0; j < n; ++j) x[j] += lambda * dir[j];
         }
 
-        double diff = 0.0;
-        for (int i = 0; i < n; ++i) 
-            diff += std::pow(x[i] - x_prev[i], 2);
+        double diff = 0.0, diff_x = 0.0;
+        for (int i = 0; i < n; ++i) {
+            diff_x += std::pow(x[i] - x_prev[i], 2);
+            diff += std::pow(f(x) - f(x_prev), 2);
+        }
         
-        if (std::sqrt(diff) < eps) {
+        if (std::sqrt(diff) < eps && std::sqrt(diff_x) < eps) {
             std::cout << "Convergence at iteration " << k + 1 << std::endl;
             break;
         }
@@ -187,7 +155,7 @@ std::vector<double> methodRosenbrock(std::vector<double> x0, Func f, double eps,
             norm_A1 += A1[i] * A1[i];
         norm_A1 = std::sqrt(norm_A1);
         
-        if (norm_A1 < eps) {
+        if (norm_A1 < eps && abs(f(x) - f(x_start)) < eps) {
             std::cout << "Convergence at iteration " << k + 1 << std::endl;
             break;
         }
@@ -249,12 +217,12 @@ std::vector<double> methodRosenbrock(std::vector<double> x0, Func f, double eps,
 }
 
 int main() {
-    std::cout << std::fixed << std::setprecision(6);
+    std::cout << std::fixed << std::setprecision(8);
     
-    double eps = 1e-4;
-    double eps_1d = 1e-5;
+    double eps = 1e-8;
+    double eps_1d = 1e-8;
     int maxIter = 100;
-    double delta0 = 0.5;
+    double delta0 = 0.01;
 
     std::vector<double> x0_quad = {0.0, 0.0};
     std::vector<double> x0_ros = {-1.2, 1.0};
