@@ -1,4 +1,5 @@
 #include <iostream>
+#include <fstream>
 #include <vector>
 #include <cmath>
 #include <iomanip>
@@ -17,14 +18,60 @@ double rosenbrockFunc(const std::vector<double>& x) {
 
 // Golden-Ratio One-Dimensional Search
 double lineSearch(const std::vector<double>& x0, const std::vector<double>& dir, Func f, double eps_1d) {
-    double a = -10.0, b = 10.0, phi = (1.0 + std::sqrt(5.0)) / 2.0;
-    
     auto f_lambda = [&](double lambda) {
         std::vector<double> x = x0;
         for (size_t i = 0; i < x.size(); ++i) x[i] += lambda * dir[i];
         return f(x);
     };
     
+    // Dynamic Edging
+    double h = 0.01;
+    double lambda0 = 0.0;
+    
+    double f_minus = f_lambda(lambda0 - h);
+    double f0 = f_lambda(lambda0);
+    double f_plus = f_lambda(lambda0 + h);
+    
+    double a, b;
+    
+    if (f_minus >= f0 && f_plus >= f0) {
+        a = lambda0 - h;
+        b = lambda0 + h;
+    } else {
+        double step = h;
+        double l_prev = lambda0;
+        double l_curr = lambda0;
+        double f_curr = f0;
+        
+        if (f_minus < f0) {
+            step = -h;
+            l_curr = lambda0 - h;
+            f_curr = f_minus;
+        } else {
+            step = h;
+            l_curr = lambda0 + h;
+            f_curr = f_plus;
+        }
+        
+        while (true) {
+            step *= 2.0;
+            double l_next = l_curr + step;
+            double f_next = f_lambda(l_next);
+            
+            if (f_next >= f_curr) {
+                a = std::min(l_prev, l_next);
+                b = std::max(l_prev, l_next);
+                break;
+            }
+            
+            l_prev = l_curr;
+            l_curr = l_next;
+            f_curr = f_next;
+        }
+    }
+    
+    // Golden-Ratio Method
+    double phi = (1.0 + std::sqrt(5.0)) / 2.0;
     double x1 = b - (b - a) / phi, x2 = a + (b - a) / phi;
     double f1 = f_lambda(x1), f2 = f_lambda(x2);
     
@@ -47,7 +94,16 @@ double lineSearch(const std::vector<double>& x0, const std::vector<double>& dir,
     return (a + b) / 2.0;
 }
 
-std::vector<double> methodGauss(std::vector<double> x0, Func f, double eps, double eps_1d, int maxIter) {
+std::vector<double> methodGauss(std::vector<double> x0, Func f, double eps, double eps_1d, int maxIter, std::string log_file_name = "") {
+    std::ofstream log_file;
+    if (log_file_name.length() > 0) {
+        log_file.open(log_file_name);
+        if (!log_file.is_open()) {
+            std::cerr << "Could not open file " << log_file_name << std::endl;
+            return {};
+        }
+    }
+
     std::vector<double> x = x0;
     int n = static_cast<int>(x.size());
     std::cout << "\nGauss Method\n";
@@ -59,6 +115,9 @@ std::vector<double> methodGauss(std::vector<double> x0, Func f, double eps, doub
             dir[i] = 1.0;
             double lambda = lineSearch(x, dir, f, eps_1d);
             for (int j = 0; j < n; ++j) x[j] += lambda * dir[j];
+
+            for (int j = 0; j < n; ++j) log_file << x[j] << ' ';
+            log_file << '\n';
         }
 
         double diff = 0.0, diff_x = 0.0;
@@ -72,10 +131,22 @@ std::vector<double> methodGauss(std::vector<double> x0, Func f, double eps, doub
             break;
         }
     }
+
+    log_file.close();
+
     return x;
 }
 
-std::vector<double> methodHookeJeeves(std::vector<double> x0, Func f, double eps, double delta0, double eps_1d, int maxIter) {
+std::vector<double> methodHookeJeeves(std::vector<double> x0, Func f, double eps, double delta0, double eps_1d, int maxIter, std::string log_file_name = "") {
+    std::ofstream log_file;
+    if (log_file_name.length() > 0) {
+        log_file.open(log_file_name);
+        if (!log_file.is_open()) {
+            std::cerr << "Could not open file " << log_file_name << std::endl;
+            return {};
+        }
+    }
+
     std::vector<double> x_base = x0, x_curr = x0;
     double delta = delta0;
     int n = static_cast<int>(x0.size());
@@ -122,15 +193,30 @@ std::vector<double> methodHookeJeeves(std::vector<double> x0, Func f, double eps
             x_base = x_curr;
         }
 
+        for (int j = 0; j < n; ++j) log_file << x_curr[j] << ' ';
+        log_file << '\n';
+
         if (delta < eps) {
             std::cout << "Convergence at iteration " << k + 1 << std::endl;
             break;
         }
     }
+
+    log_file.close();
+
     return x_curr;
 }
 
-std::vector<double> methodRosenbrock(std::vector<double> x0, Func f, double eps, double eps_1d, int maxIter) {
+std::vector<double> methodRosenbrock(std::vector<double> x0, Func f, double eps, double eps_1d, int maxIter, std::string log_file_name = "") {
+    std::ofstream log_file;
+    if (log_file_name.length() > 0) {
+        log_file.open(log_file_name);
+        if (!log_file.is_open()) {
+            std::cerr << "Could not open file " << log_file_name << std::endl;
+            return {};
+        }
+    }
+
     std::vector<double> x = x0;
     int n = static_cast<int>(x.size());
     std::vector<std::vector<double>> S(n, std::vector<double>(n, 0.0));
@@ -155,6 +241,9 @@ std::vector<double> methodRosenbrock(std::vector<double> x0, Func f, double eps,
             norm_A1 += A1[i] * A1[i];
         norm_A1 = std::sqrt(norm_A1);
         
+        for (int j = 0; j < n; ++j) log_file << x[j] << ' ';
+        log_file << '\n';
+
         if (norm_A1 < eps && abs(f(x) - f(x_start)) < eps) {
             std::cout << "Convergence at iteration " << k + 1 << std::endl;
             break;
@@ -213,15 +302,18 @@ std::vector<double> methodRosenbrock(std::vector<double> x0, Func f, double eps,
 
         S = S_new;
     }
+
+    log_file.close();
+
     return x;
 }
 
 int main() {
     std::cout << std::fixed << std::setprecision(8);
     
-    double eps = 1e-8;
-    double eps_1d = 1e-8;
-    int maxIter = 100;
+    double eps = 1e-4;
+    double eps_1d = 1e-4;
+    int maxIter = 1000;
     double delta0 = 0.01;
 
     std::vector<double> x0_quad = {0.0, 0.0};
@@ -231,15 +323,15 @@ int main() {
     std::cout << "Starting point: [0.0, 0.0]\n";
     std::cout << "Expected minimum: [3.0, 7.0]\n\n";
     
-    std::vector<double> res1 = methodGauss(x0_quad, quadraticFunc, eps, eps_1d, maxIter);
+    std::vector<double> res1 = methodGauss(x0_quad, quadraticFunc, eps, eps_1d, maxIter, "gauss_quad.txt");
     std::cout << "Gauss Result: [" << res1[0] << ", " << res1[1] 
               << "] F = " << quadraticFunc(res1) << std::endl;
 
-    std::vector<double> res2 = methodHookeJeeves(x0_quad, quadraticFunc, eps, delta0, eps_1d, maxIter);
+    std::vector<double> res2 = methodHookeJeeves(x0_quad, quadraticFunc, eps, delta0, eps_1d, maxIter, "hj_quad.txt");
     std::cout << "Hooke-Jeeves Result: [" << res2[0] << ", " << res2[1] 
               << "] F = " << quadraticFunc(res2) << std::endl;
 
-    std::vector<double> res3 = methodRosenbrock(x0_quad, quadraticFunc, eps, eps_1d, maxIter);
+    std::vector<double> res3 = methodRosenbrock(x0_quad, quadraticFunc, eps, eps_1d, maxIter, "rosen_quad.txt");
     std::cout << "Rosenbrock Result: [" << res3[0] << ", " << res3[1] 
               << "] F = " << quadraticFunc(res3) << std::endl;
 
@@ -247,15 +339,15 @@ int main() {
     std::cout << "Starting point: [-1.2, 1.0]\n";
     std::cout << "Expected minimum: [1.0, 1.0]\n\n";
     
-    res1 = methodGauss(x0_ros, rosenbrockFunc, eps, eps_1d, 200);
+    res1 = methodGauss(x0_ros, rosenbrockFunc, eps, eps_1d, maxIter, "gauss_rosen.txt");
     std::cout << "Gauss Result: [" << res1[0] << ", " << res1[1] 
               << "] F = " << rosenbrockFunc(res1) << std::endl;
 
-    res2 = methodHookeJeeves(x0_ros, rosenbrockFunc, eps, delta0, eps_1d, 200);
+    res2 = methodHookeJeeves(x0_ros, rosenbrockFunc, eps, delta0, eps_1d, maxIter, "hj_rosen.txt");
     std::cout << "Hooke-Jeeves Result: [" << res2[0] << ", " << res2[1] 
               << "] F = " << rosenbrockFunc(res2) << std::endl;
 
-    res3 = methodRosenbrock(x0_ros, rosenbrockFunc, eps, eps_1d, 200);
+    res3 = methodRosenbrock(x0_ros, rosenbrockFunc, eps, eps_1d, maxIter, "rosen_rosen.txt");
     std::cout << "Rosenbrock Result: [" << res3[0] << ", " << res3[1] 
               << "] F = " << rosenbrockFunc(res3) << std::endl;
 
