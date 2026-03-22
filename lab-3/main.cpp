@@ -5,11 +5,10 @@
 #include <functional>
 #include <iomanip>
 
-// Типы для функций и векторов
 using Func = std::function<double(const std::vector<double>&)>;
 using Grad = std::function<std::vector<double>(const std::vector<double>&)>;
 
-// --- Операции с векторами ---
+// Vectors Operations
 std::vector<double> operator-(const std::vector<double>& a, const std::vector<double>& b) {
     std::vector<double> res(a.size());
     for (size_t i = 0; i < a.size(); ++i) res[i] = a[i] - b[i];
@@ -38,7 +37,7 @@ double norm(const std::vector<double>& a) {
     return sqrt(dot(a, a));
 }
 
-// --- Тестовые функции и их градиенты ---
+// Test Functions
 double quadraticFunc(const std::vector<double>& x) {
     return 10.0 * std::pow(x[0] + x[1] - 10.0, 2) + std::pow(x[0] - x[1] + 4.0, 2);
 }
@@ -60,7 +59,68 @@ std::vector<double> grad_rosen(const std::vector<double>& x) {
     };
 }
 
-// Golden-Ratio One-Dimensional Search
+double lineSearchSPI(const std::vector<double>& x0, const std::vector<double>& dir, Func f, double eps_1d) {
+    auto f_lambda = [&](double lambda) {
+        std::vector<double> x = x0;
+        for (size_t i = 0; i < x.size(); ++i) x[i] += lambda * dir[i];
+        return f(x);
+    };
+    
+    // 1. Find the initial 3 points (x1, x2, x3) using your dynamic edging
+    // (I am simplifying the bracket finding here for brevity, but you should 
+    // ensure x1 < x2 < x3 and f(x2) < f(x1), f(x2) < f(x3))
+    double x1 = 0.0;
+    double step = 0.01;
+    double x2 = x1 + step;
+    
+    while (f_lambda(x2) > f_lambda(x1)) {
+        step /= 2.0;
+        x2 = x1 + step;
+    }
+    
+    double x3 = x2 + step;
+    while (f_lambda(x3) < f_lambda(x2)) {
+        step *= 2.0;
+        x1 = x2;
+        x2 = x3;
+        x3 = x3 + step;
+    }
+
+    double f1 = f_lambda(x1), f2 = f_lambda(x2), f3 = f_lambda(x3);
+    double x_new = x2;
+    double f_new = f2;
+
+    // 2. Successive Parabolic Interpolation Loop
+    int max_iter = 100;
+    for (int i = 0; i < max_iter; ++i) {
+        // Standard formula for parabolic minimum
+        double num = std::pow(x2 - x1, 2) * (f2 - f3) - std::pow(x2 - x3, 2) * (f2 - f1);
+        double den = (x2 - x1) * (f2 - f3) - (x2 - x3) * (f2 - f1);
+
+        // Safeguard against division by zero (collinear points)
+        if (std::abs(den) < 1e-10) break; 
+
+        double x_prev = x_new;
+        x_new = x2 - 0.5 * (num / den);
+        f_new = f_lambda(x_new);
+
+        // Convergence check
+        if (std::abs(x_new - x_prev) < eps_1d) break;
+
+        // Update the points (Keep the bracket tight around the lowest values)
+        if (x_new > x2) {
+            if (f_new < f2) { x1 = x2; f1 = f2; x2 = x_new; f2 = f_new; }
+            else { x3 = x_new; f3 = f_new; }
+        } else {
+            if (f_new < f2) { x3 = x2; f3 = f2; x2 = x_new; f2 = f_new; }
+            else { x1 = x_new; f1 = f_new; }
+        }
+    }
+    
+    return x_new;
+}
+
+// One-Dimensional Search
 double lineSearch(const std::vector<double>& x0, const std::vector<double>& dir, Func f, double eps_1d) {
     auto f_lambda = [&](double lambda) {
         std::vector<double> x = x0;
@@ -138,7 +198,6 @@ double lineSearch(const std::vector<double>& x0, const std::vector<double>& dir,
     return (a + b) / 2.0;
 }
 
-// --- 1. Метод наискорейшего спуска  ---
 std::vector<double> steepestDescent(std::vector<double> x, Func f, Grad g, double eps, double eps1d, int maxIter, std::string log_file_name = "") {
     std::ofstream log_file;
     if (log_file_name.length() > 0) {
@@ -154,7 +213,7 @@ std::vector<double> steepestDescent(std::vector<double> x, Func f, Grad g, doubl
     for (int iter = 0; iter < maxIter; ++iter) {
         std::vector<double> grad = g(x);
         
-        std::vector<double> s = grad * (-1.0 / norm(grad)); // Направление спуска 
+        std::vector<double> s = grad * (-1.0 / norm(grad));
         double lambda = lineSearch(x, s, f, eps1d);
         
         for (int j = 0; j < n; ++j) log_file << x[j] << ' ';
@@ -173,7 +232,6 @@ std::vector<double> steepestDescent(std::vector<double> x, Func f, Grad g, doubl
     return x;
 }
 
-// --- 2. Метод сопряженных градиентов (Флетчера-Ривса) [cite: 168] ---
 std::vector<double> conjugateGradientFR(std::vector<double> x, Func f, Grad g, double eps, double eps1d, int maxIter, int maxRestart, std::string log_file_name = "") {
     std::ofstream log_file;
     if (log_file_name.length() > 0) {
@@ -186,7 +244,7 @@ std::vector<double> conjugateGradientFR(std::vector<double> x, Func f, Grad g, d
     
     int n = x.size();
     std::vector<double> grad = g(x);
-    std::vector<double> s = grad * -1.0; // S0 = -grad(f) [cite: 157]
+    std::vector<double> s = grad * -1.0;
 
     for (int reset = 0; reset < maxRestart; ++reset){
         for (int iter = 0; iter < maxIter; ++iter) {
@@ -194,17 +252,16 @@ std::vector<double> conjugateGradientFR(std::vector<double> x, Func f, Grad g, d
             std::vector<double> x_next = x + s * lambda;
             std::vector<double> grad_next = g(x_next);
             
-            // Коэффициент Флетчера-Ривса [cite: 168]
             double omega = dot(grad_next, grad_next) / dot(grad, grad);
             
             for (int j = 0; j < n; ++j) log_file << x[j] << ' ';
             log_file << '\n';
 
-            s = (grad_next * -1.0) + (s * omega); // Новое направление [cite: 164]
+            s = (grad_next * -1.0) + (s * omega);
             x = x_next;
             grad = grad_next;
 
-            if (norm(s) < eps) {
+            if (norm(grad) < eps) {
                 std::cout << "Convergence at iteration " << iter + 1 << " and resets count " << reset << std::endl;
                 return x;
             }
@@ -228,28 +285,30 @@ std::vector<double> conjugateGradientPR(std::vector<double> x, Func f, Grad g, d
     
     int n = x.size();
     std::vector<double> grad = g(x);
-    std::vector<double> s = grad * -1.0; // S0 = -grad(f) [cite: 157]
+    std::vector<double> s = grad * -1.0;
 
-    for (int reset = 0; reset < maxRestart; ++reset){
-        for (int iter = 0; iter < maxIter; ++iter) {
-            double lambda = lineSearch(x, s, f, eps1d);
-            std::vector<double> x_next = x + s * lambda;
-            std::vector<double> grad_next = g(x_next);
-            
-            std::vector<double> grad_diff = grad_next - grad;
-            double omega = dot(grad_next, grad_diff) / dot(grad, s);
-            
-            for (int j = 0; j < n; ++j) log_file << x[j] << ' ';
-            log_file << '\n';
+    for (int iter = 0; iter < maxIter; ++iter) {
+        double lambda = lineSearch(x, s, f, eps1d);
+        std::vector<double> x_next = x + s * lambda;
+        std::vector<double> grad_next = g(x_next);
+        
+        std::vector<double> grad_diff = grad_next - grad;
+        double omega = dot(grad_next, grad_diff) / dot(grad, grad);
+        
+        for (int j = 0; j < n; ++j) log_file << x[j] << ' ';
+        log_file << '\n';
 
-            s = (grad_next * -1.0) + (s * omega); // Новое направление [cite: 164]
-            x = x_next;
-            grad = grad_next;
+        if (iter % n == 0 && iter > 0) {
+            s = grad_next * -1.0;
+        } else {
+            s = (grad_next * -1.0) + (s * omega);
+        }
+        x = x_next;
+        grad = grad_next;
 
-            if (norm(s) < eps) {
-                std::cout << "Convergence at iteration " << iter + 1 << " and resets count " << reset << std::endl;
-                return x;
-            }
+        if (norm(grad) < eps) {
+            std::cout << "Convergence at iteration " << iter + 1 << std::endl;
+            return x;
         }
     }
 
@@ -258,7 +317,6 @@ std::vector<double> conjugateGradientPR(std::vector<double> x, Func f, Grad g, d
     return x;
 }
 
-// --- 3. Метод переменной метрики (Бройдена)  ---
 std::vector<double> broydenMethod(std::vector<double> x, Func f, Grad g, double eps, double eps1d, int maxIter, std::string log_file_name = "") {
     std::ofstream log_file;
     if (log_file_name.length() > 0) {
@@ -270,14 +328,14 @@ std::vector<double> broydenMethod(std::vector<double> x, Func f, Grad g, double 
     }
     
     int n = x.size();
-    std::vector<std::vector<double>> H(n, std::vector<double>(n, 0.0)); // Аппроксимация обратного Гессиана
-    for(int i=0; i<n; ++i) H[i][i] = 1.0; // H0 = E [cite: 183]
+    std::vector<std::vector<double>> H(n, std::vector<double>(n, 0.0));
+    for(int i=0; i<n; ++i) H[i][i] = 1.0;
 
     for (int iter = 0; iter < maxIter; ++iter) {
         std::vector<double> grad = g(x);
         std::vector<double> s(n, 0.0);
         for(int i=0; i<n; ++i) 
-            for(int j=0; j<n; ++j) s[i] -= H[i][j] * grad[j]; // s = -H*grad [cite: 197]
+            for(int j=0; j<n; ++j) s[i] -= H[i][j] * grad[j];
 
         double lambda = lineSearch(x, s, f, eps1d);
         std::vector<double> x_next = x + s * lambda;
@@ -310,7 +368,7 @@ std::vector<double> broydenMethod(std::vector<double> x, Func f, Grad g, double 
 
         x = x_next;
         
-        if (norm(s) < eps) {
+        if (norm(grad) < eps) {
             std::cout << "Convergence at iteration " << iter + 1 << std::endl;
             return x;
         }
@@ -332,8 +390,8 @@ std::vector<double> broydenMethodDFP(std::vector<double> x, Func f, Grad g, doub
     }
     
     int n = x.size();
-    std::vector<std::vector<double>> H(n, std::vector<double>(n, 0.0)); // Аппроксимация обратного Гессиана
-    for(int i=0; i<n; ++i) H[i][i] = 1.0; // H0 = E [cite: 183]
+    std::vector<std::vector<double>> H(n, std::vector<double>(n, 0.0));
+    for(int i=0; i<n; ++i) H[i][i] = 1.0;
 
     for (int iter = 0; iter < maxIter; ++iter) {
         std::vector<double> grad = g(x);
@@ -347,12 +405,8 @@ std::vector<double> broydenMethodDFP(std::vector<double> x, Func f, Grad g, doub
         std::vector<double> delta_x = x_next - x; 
         std::vector<double> delta_g = g(x_next) - grad; 
 
-        // --- Обновление DFP ---
-        
-        // Знаменатель 1: (delta_x^T * delta_g)
         double dot_xg = dot(delta_x, delta_g);
 
-        // Вычисление H * delta_g
         std::vector<double> H_dg(n, 0.0);
         for(int i = 0; i < n; ++i) {
             for(int j = 0; j < n; ++j) {
@@ -360,10 +414,8 @@ std::vector<double> broydenMethodDFP(std::vector<double> x, Func f, Grad g, doub
             }
         }
 
-        // Знаменатель 2: (delta_g^T * H * delta_g)
         double dot_gHg = dot(delta_g, H_dg);
 
-        // Обновление H, если знаменатели не близки к нулю
         if (abs(dot_xg) > 1e-10 && abs(dot_gHg) > 1e-10) { 
             for(int i = 0; i < n; ++i) {
                 for(int j = 0; j < n; ++j) {
@@ -379,7 +431,7 @@ std::vector<double> broydenMethodDFP(std::vector<double> x, Func f, Grad g, doub
 
         x = x_next;
         
-        if (norm(s) < eps) {
+        if (norm(grad) < eps) {
             std::cout << "Convergence at iteration " << iter + 1 << std::endl;
             return x;
         }
@@ -394,11 +446,12 @@ int main() {
     std::cout << std::fixed << std::setprecision(8);
     
     double eps = 1e-4;
-    double eps_1d = 1e-4;
+    double eps_1d = 1e-8;
     int maxIter = 100000, maxReset = 100;
 
     std::vector<double> x0_quad = {0.0, 0.0};
     std::vector<double> x0_ros = {-1.2, 1.0};
+    std::vector<double> x0_ros2 = {-0.5, 3};
 
     std::cout << "Minimization of Quadratic Function\n";
     std::cout << "Starting point: [0.0, 0.0]\n";
@@ -428,23 +481,47 @@ int main() {
     std::cout << "Starting point: [-1.2, 1.0]\n";
     std::cout << "Expected minimum: [1.0, 1.0]\n\n";
     
-    res1 = steepestDescent(x0_quad, rosenbrockFunc, grad_rosen, eps, eps_1d, maxIter, "sd_rosen.txt");
+    res1 = steepestDescent(x0_ros, rosenbrockFunc, grad_rosen, eps, eps_1d, maxIter, "sd_rosen.txt");
     std::cout << "Grad Descent Result: [" << res1[0] << ", " << res1[1] 
               << "] F = " << rosenbrockFunc(res1) << '\n' << std::endl;
 
-    res2 = conjugateGradientFR(x0_quad, rosenbrockFunc, grad_rosen, eps, eps_1d, maxIter, maxReset, "cg_rosen.txt");
+    res2 = conjugateGradientFR(x0_ros, rosenbrockFunc, grad_rosen, eps, eps_1d, maxIter, maxReset, "cg_rosen.txt");
     std::cout << "Flatcher-Rieves Result: [" << res2[0] << ", " << res2[1] 
               << "] F = " << rosenbrockFunc(res2) << '\n' << std::endl;
 
-    res3 = conjugateGradientPR(x0_quad, rosenbrockFunc, grad_rosen, eps, eps_1d, maxIter, maxReset, "cgpr_rosen.txt");
+    res3 = conjugateGradientPR(x0_ros, rosenbrockFunc, grad_rosen, eps, eps_1d, maxIter, maxReset, "cgpr_rosen.txt");
     std::cout << "Polak-Ribier Result: [" << res3[0] << ", " << res3[1] 
               << "] F = " << rosenbrockFunc(res3) << '\n' << std::endl;
 
-    res4 = broydenMethod(x0_quad, rosenbrockFunc, grad_rosen, eps, eps_1d, maxIter, "bm_rosen.txt");
+    res4 = broydenMethod(x0_ros, rosenbrockFunc, grad_rosen, eps, eps_1d, maxIter, "bm_rosen.txt");
     std::cout << "Broiden Result: [" << res4[0] << ", " << res4[1] 
               << "] F = " << rosenbrockFunc(res4) << '\n' << std::endl;
     
-    res5 = broydenMethodDFP(x0_quad, rosenbrockFunc, grad_rosen, eps, eps_1d, maxIter, "bmdpf_rosen.txt");
+    res5 = broydenMethodDFP(x0_ros, rosenbrockFunc, grad_rosen, eps, eps_1d, maxIter, "bmdpf_rosen.txt");
+    std::cout << "DFP Result: [" << res5[0] << ", " << res5[1] 
+              << "] F = " << rosenbrockFunc(res5) << '\n' << std::endl;
+
+    std::cout << "\n\nMinimization of Rosenbrock Function\n";
+    std::cout << "Starting point: [-0.5, 3]\n";
+    std::cout << "Expected minimum: [1.0, 1.0]\n\n";
+    
+    res1 = steepestDescent(x0_ros2, rosenbrockFunc, grad_rosen, eps, eps_1d, maxIter, "sd_rosen2.txt");
+    std::cout << "Grad Descent Result: [" << res1[0] << ", " << res1[1] 
+              << "] F = " << rosenbrockFunc(res1) << '\n' << std::endl;
+
+    res2 = conjugateGradientFR(x0_ros2, rosenbrockFunc, grad_rosen, eps, eps_1d, maxIter, maxReset, "cg_rosen2.txt");
+    std::cout << "Flatcher-Rieves Result: [" << res2[0] << ", " << res2[1] 
+              << "] F = " << rosenbrockFunc(res2) << '\n' << std::endl;
+
+    res3 = conjugateGradientPR(x0_ros2, rosenbrockFunc, grad_rosen, eps, eps_1d, maxIter, maxReset, "cgpr_rosen2.txt");
+    std::cout << "Polak-Ribier Result: [" << res3[0] << ", " << res3[1] 
+              << "] F = " << rosenbrockFunc(res3) << '\n' << std::endl;
+
+    res4 = broydenMethod(x0_ros2, rosenbrockFunc, grad_rosen, eps, eps_1d, maxIter, "bm_rosen2.txt");
+    std::cout << "Broiden Result: [" << res4[0] << ", " << res4[1] 
+              << "] F = " << rosenbrockFunc(res4) << '\n' << std::endl;
+    
+    res5 = broydenMethodDFP(x0_ros2, rosenbrockFunc, grad_rosen, eps, eps_1d, maxIter, "bmdpf_rosen2.txt");
     std::cout << "DFP Result: [" << res5[0] << ", " << res5[1] 
               << "] F = " << rosenbrockFunc(res5) << '\n' << std::endl;
 
