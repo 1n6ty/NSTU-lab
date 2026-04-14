@@ -28,7 +28,7 @@ union semun {
 
 void child_process(int child_idx, int shmid, int semid, int msgid) {
     char (*shm_ptr)[PROG_LEN] = shmat(shmid, NULL, 0);
-    srand(time(NULL));
+    srand(time(NULL) ^ getpid());
 
     struct sembuf acquire = {child_idx, -1, IPC_NOWAIT};
     struct sembuf release = {child_idx, 1, 0};
