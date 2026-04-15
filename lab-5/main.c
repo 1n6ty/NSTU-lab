@@ -32,9 +32,10 @@ void child_process(int child_idx, int shmid, int semid, int msgid) {
     struct sembuf acquire = {child_idx, -1, 0};
     struct sembuf release = {child_idx, 1, 0};
 
-    for (int i = 0; i < WORK_CYCLES; i++) {
+    srand(time(NULL) ^ getpid());
+    char *prog_name = shm_ptr[rand() % MAX_PROGS];
 
-        char *prog_name = shm_ptr[child_idx];
+    for (int i = 0; i < WORK_CYCLES; i++) {
 
         if (fork() == 0) {
             if (semop(semid, &acquire, 1) == 0) {
