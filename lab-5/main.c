@@ -13,7 +13,7 @@
 #define MAX_PROGS 3
 #define PROG_LEN 50
 #define NUM_CHILDREN 3
-#define WORK_CYCLES 5
+#define WORK_CYCLES 2
 
 struct msgbuf {
     long mtype;
@@ -28,23 +28,21 @@ union semun {
 
 void child_process(int child_idx, int shmid, int semid, int msgid) {
     char (*shm_ptr)[PROG_LEN] = shmat(shmid, NULL, 0);
-    srand(time(NULL) ^ getpid());
 
-    struct sembuf acquire = {child_idx, -1, IPC_NOWAIT};
+    struct sembuf acquire = {child_idx, -1, 0};
     struct sembuf release = {child_idx, 1, 0};
 
     for (int i = 0; i < WORK_CYCLES; i++) {
-        sleep(rand() % 3 + 1); // Just immitating work
 
-        char *prog_name = shm_ptr[rand() % MAX_PROGS];
+        char *prog_name = shm_ptr[child_idx];
 
-        if (semop(semid, &acquire, 1) == 0) {
-            struct msgbuf msg;
-            msg.mtype = 1;
-            snprintf(msg.mtext, sizeof(msg.mtext), "Child process #%d (PID %d) started: %s", child_idx, getpid(), prog_name);
-            msgsnd(msgid, &msg, sizeof(msg.mtext), 0);
-
-            if (fork() == 0) {
+        if (fork() == 0) {
+            if (semop(semid, &acquire, 1) == 0) {
+                struct msgbuf msg;
+                msg.mtype = 1;
+                snprintf(msg.mtext, sizeof(msg.mtext), "Child process #%d (PID %d) started: %s", child_idx, getpid(), prog_name);
+                msgsnd(msgid, &msg, sizeof(msg.mtext), 0);
+                
                 system(prog_name);
 
                 semop(semid, &release, 1);
