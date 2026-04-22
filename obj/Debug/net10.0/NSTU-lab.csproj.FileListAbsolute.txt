@@ -1,0 +1,5 @@
+C:\Users\ianak\OneDrive\Рабочий стол\folder with folders\NSTU-lab\obj\Debug\net10.0\NSTU-lab.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\ianak\OneDrive\Рабочий стол\folder with folders\NSTU-lab\obj\Debug\net10.0\NSTU-lab.AssemblyInfoInputs.cache
+C:\Users\ianak\OneDrive\Рабочий стол\folder with folders\NSTU-lab\obj\Debug\net10.0\NSTU-lab.AssemblyInfo.cs
+C:\Users\ianak\OneDrive\Рабочий стол\folder with folders\NSTU-lab\obj\Debug\net10.0\NSTU-lab.csproj.CoreCompileInputs.cache
+C:\Users\ianak\OneDrive\Рабочий стол\folder with folders\NSTU-lab\obj\Debug\net10.0\NSTU-lab.sourcelink.json
