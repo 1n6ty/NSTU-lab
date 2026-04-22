@@ -1,0 +1,4 @@
+D:\NSTU\Prog\ТРПО\3 лаба\PNumberCalculator\obj\Debug\net6.0-windows\PNumberCalculator.GeneratedMSBuildEditorConfig.editorconfig
+D:\NSTU\Prog\ТРПО\3 лаба\PNumberCalculator\obj\Debug\net6.0-windows\PNumberCalculator.AssemblyInfoInputs.cache
+D:\NSTU\Prog\ТРПО\3 лаба\PNumberCalculator\obj\Debug\net6.0-windows\PNumberCalculator.AssemblyInfo.cs
+D:\NSTU\Prog\ТРПО\3 лаба\PNumberCalculator\obj\Debug\net6.0-windows\PNumberCalculator.csproj.CoreCompileInputs.cache
