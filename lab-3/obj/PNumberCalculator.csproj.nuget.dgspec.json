@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "D:\\NSTU\\Prog\\ТРПО\\3 лаба\\PNumberCalculator\\PNumberCalculator.csproj": {}
+    "C:\\Users\\ianak\\OneDrive\\Рабочий стол\\folder with folders\\NSTU-lab\\lab-3\\PNumberCalculator.csproj": {}
   },
   "projects": {
-    "D:\\NSTU\\Prog\\ТРПО\\3 лаба\\PNumberCalculator\\PNumberCalculator.csproj": {
+    "C:\\Users\\ianak\\OneDrive\\Рабочий стол\\folder with folders\\NSTU-lab\\lab-3\\PNumberCalculator.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\NSTU\\Prog\\ТРПО\\3 лаба\\PNumberCalculator\\PNumberCalculator.csproj",
+        "projectUniqueName": "C:\\Users\\ianak\\OneDrive\\Рабочий стол\\folder with folders\\NSTU-lab\\lab-3\\PNumberCalculator.csproj",
         "projectName": "PNumberCalculator",
-        "projectPath": "D:\\NSTU\\Prog\\ТРПО\\3 лаба\\PNumberCalculator\\PNumberCalculator.csproj",
+        "projectPath": "C:\\Users\\ianak\\OneDrive\\Рабочий стол\\folder with folders\\NSTU-lab\\lab-3\\PNumberCalculator.csproj",
         "packagesPath": "C:\\Users\\ianak\\.nuget\\packages\\",
-        "outputPath": "D:\\NSTU\\Prog\\ТРПО\\3 лаба\\PNumberCalculator\\obj\\",
+        "outputPath": "C:\\Users\\ianak\\OneDrive\\Рабочий стол\\folder with folders\\NSTU-lab\\lab-3\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\ianak\\AppData\\Roaming\\NuGet\\NuGet.Config"

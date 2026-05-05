@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("PNumberCalculator")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+fef27877bb41cb531f6e9e4739d4f397f5717e6d")]
 [assembly: System.Reflection.AssemblyProductAttribute("PNumberCalculator")]
 [assembly: System.Reflection.AssemblyTitleAttribute("PNumberCalculator")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

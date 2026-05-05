@@ -1,0 +1,14 @@
+D:\NSTU\Prog\ТРПО\4 лаба\UniversalCalculator\obj\Debug\net8.0-windows\UniversalCalculator.GeneratedMSBuildEditorConfig.editorconfig
+D:\NSTU\Prog\ТРПО\4 лаба\UniversalCalculator\obj\Debug\net8.0-windows\UniversalCalculator.AssemblyInfoInputs.cache
+D:\NSTU\Prog\ТРПО\4 лаба\UniversalCalculator\obj\Debug\net8.0-windows\UniversalCalculator.AssemblyInfo.cs
+D:\NSTU\Prog\ТРПО\4 лаба\UniversalCalculator\obj\Debug\net8.0-windows\UniversalCalculator.csproj.CoreCompileInputs.cache
+D:\NSTU\Prog\ТРПО\4 лаба\UniversalCalculator\bin\Debug\net8.0-windows\UniversalCalculator.exe
+D:\NSTU\Prog\ТРПО\4 лаба\UniversalCalculator\bin\Debug\net8.0-windows\UniversalCalculator.deps.json
+D:\NSTU\Prog\ТРПО\4 лаба\UniversalCalculator\bin\Debug\net8.0-windows\UniversalCalculator.runtimeconfig.json
+D:\NSTU\Prog\ТРПО\4 лаба\UniversalCalculator\bin\Debug\net8.0-windows\UniversalCalculator.dll
+D:\NSTU\Prog\ТРПО\4 лаба\UniversalCalculator\bin\Debug\net8.0-windows\UniversalCalculator.pdb
+D:\NSTU\Prog\ТРПО\4 лаба\UniversalCalculator\obj\Debug\net8.0-windows\UniversalCalculator.dll
+D:\NSTU\Prog\ТРПО\4 лаба\UniversalCalculator\obj\Debug\net8.0-windows\refint\UniversalCalculator.dll
+D:\NSTU\Prog\ТРПО\4 лаба\UniversalCalculator\obj\Debug\net8.0-windows\UniversalCalculator.pdb
+D:\NSTU\Prog\ТРПО\4 лаба\UniversalCalculator\obj\Debug\net8.0-windows\UniversalCalculator.genruntimeconfig.cache
+D:\NSTU\Prog\ТРПО\4 лаба\UniversalCalculator\obj\Debug\net8.0-windows\ref\UniversalCalculator.dll

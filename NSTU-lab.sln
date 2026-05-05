@@ -1,0 +1,29 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.2.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "lab-3", "lab-3", "{0077A2C0-74B9-78B5-BD37-66432975CE36}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PNumberCalculator", "lab-3\PNumberCalculator.csproj", "{71733AA0-21D3-C75B-4AE1-574156EC27AB}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{71733AA0-21D3-C75B-4AE1-574156EC27AB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{71733AA0-21D3-C75B-4AE1-574156EC27AB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{71733AA0-21D3-C75B-4AE1-574156EC27AB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{71733AA0-21D3-C75B-4AE1-574156EC27AB}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{71733AA0-21D3-C75B-4AE1-574156EC27AB} = {0077A2C0-74B9-78B5-BD37-66432975CE36}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {C8CD8BB6-EFBC-4171-92D7-FDF63C86C2B6}
+	EndGlobalSection
+EndGlobal
