@@ -1,107 +1,167 @@
+import numpy as np
 import pandas as pd
 from pathlib import Path
+from scipy.stats import fisher_exact
 
-from sklearn.metrics import mutual_info_score
-import numpy as np
 
-def calculate_entropy(labels):
-    labels = np.asarray(labels, dtype=str)
-    _, counts = np.unique(labels, return_counts=True)
-    probabilities = counts / len(labels)
-    return -np.sum(probabilities * np.log2(probabilities))
+TARGET = "TARGET"
 
-def symmetric_uncertainty_sklearn(x, y):
-    # Очистка от NaN
-    valid_mask = pd.notna(x) & pd.notna(y)
-    x_clean = np.asarray(x[valid_mask], dtype=str)
-    y_clean = np.asarray(y[valid_mask], dtype=str)
+CATEGORICAL_COLS = [
+    "NAME_CONTRACT_TYPE", "CODE_GENDER", "FLAG_OWN_CAR", "FLAG_OWN_REALTY",
+    "NAME_TYPE_SUITE", "NAME_INCOME_TYPE", "NAME_EDUCATION_TYPE",
+    "NAME_FAMILY_STATUS", "NAME_HOUSING_TYPE", "OCCUPATION_TYPE",
+    "WEEKDAY_APPR_PROCESS_START", "ORGANIZATION_TYPE",
+    "FONDKAPREMONT_MODE", "HOUSETYPE_MODE", "WALLSMATERIAL_MODE",
+    "EMERGENCYSTATE_MODE",
+]
+MIN_LEVELS = 5                                # "large number of levels"
+THRESHOLDS = [0.005, 0.01, 0.02, 0.05]        # rare = relative frequency < threshold
+N_BOOT = 1000
+N_PERM = 1000
+ALPHA = 0.05
+MISSING = "__MISSING__"
 
-    if len(x_clean) == 0:
+
+# CORE METRICS
+
+def encode(series: pd.Series):
+    """Integer codes; NaN becomes its own level (missingness may carry signal)."""
+    s = series.astype(object).where(series.notna(), MISSING)
+    codes, uniques = pd.factorize(s)
+    return codes.astype(np.int64), len(uniques)
+
+
+def symmetric_uncertainty(x: np.ndarray, y: np.ndarray, kx: int, ky: int) -> float:
+    """SU(X, Y) = 2 * MI(X, Y) / (H(X) + H(Y)), entropies in bits."""
+    n = len(x)
+    if n == 0:
         return 0.0
-
-    h_x = calculate_entropy(x_clean)
-    h_y = calculate_entropy(y_clean)
-    
+    joint = np.bincount(x * ky + y, minlength=kx * ky).reshape(kx, ky) / n
+    px, py = joint.sum(axis=1), joint.sum(axis=0)
+    h_x = -np.sum(px[px > 0] * np.log2(px[px > 0]))
+    h_y = -np.sum(py[py > 0] * np.log2(py[py > 0]))
     if h_x == 0 or h_y == 0:
         return 0.0
-    
-    mi = mutual_info_score(x_clean, y_clean) / np.log(2)
+    nz = joint > 0
+    mi = np.sum(joint[nz] * np.log2(joint[nz] / np.outer(px, py)[nz]))
     return 2.0 * mi / (h_x + h_y)
 
-REMOVE_K = 50
 
-BASE_DIR = Path(__file__).resolve().parent
+# RARE-LEVEL TRANSFORMATIONS
 
-DATA_HOME_CREDIT_PATH = BASE_DIR / "DataHomeCredit.csv"
-DESCRIPTION_HOME_CREDIT = BASE_DIR / "DescriptionHomeCredit.csv"
+def rare_mask(x: np.ndarray, k: int, thr: float) -> np.ndarray:
+    """Boolean per level: True if the level is rare (freq < thr) in this sample."""
+    return np.bincount(x, minlength=k) / len(x) < thr
 
-desc_df = pd.read_csv(DESCRIPTION_HOME_CREDIT, sep=";", encoding='unicode_escape', comment="#")
 
-df = pd.read_csv(DATA_HOME_CREDIT_PATH, sep=",", encoding='unicode_escape', comment="#")[list(desc_df['Column'])]
-initial_df = df
+def su_drop(x, y, k, ky, thr):
+    """Variant A: delete rows that belong to rare levels."""
+    keep = ~rare_mask(x, k, thr)[x]
+    return symmetric_uncertainty(x[keep], y[keep], k, ky)
 
-def clear_k_least_freq(df: pd.DataFrame, col_name: str, k = 1):
-    counts = df[col_name].value_counts(dropna=True)
-    least_frequent_categories = counts.nsmallest(k).index
-    return df[~df[col_name].isin(least_frequent_categories)]
 
-for col in df.columns:
-    print(f"--- Relative frequency for {col} ---")
-    print(df[col].value_counts(normalize=True, dropna=False) * 100)
-    print("\n")
+def su_merge(x, y, k, ky, thr):
+    """Variant B: keep all rows, merge rare levels into one level OTHER."""
+    x2 = np.where(rare_mask(x, k, thr)[x], k, x)
+    return symmetric_uncertainty(x2, y, k + 1, ky)
 
-LL_COLUMNS = ['OCCUPATION_TYPE', 'ORGANIZATION_TYPE']
-TARGET_COLUMN = 'TARGET'
 
-print(f"\nFiltering only large-level variables: {LL_COLUMNS}")
+def ci_and_sig(diffs):
+    lo = np.percentile(diffs, ALPHA / 2 * 100)
+    hi = np.percentile(diffs, (1 - ALPHA / 2) * 100)
+    return lo, hi, (lo > 0) or (hi < 0)
 
-df = df[LL_COLUMNS + [TARGET_COLUMN]]
 
-print("\n\n-------(SU before removing)-------\n")
-for i in LL_COLUMNS:
-    if i != "TARGET":
-        print(f"{i} vs TARGET: ", symmetric_uncertainty_sklearn(df[i], df['TARGET']))
+# STATISTICAL TESTS
 
-print(f"\n\n-------(SU after removing {REMOVE_K} layers with lowest frequences)-------\n")
-for i in LL_COLUMNS:
-    filtered = clear_k_least_freq(df, i, REMOVE_K)
-    if i != "TARGET": 
-        print(f"{i} vs TARGET: ", symmetric_uncertainty_sklearn(filtered[i], filtered['TARGET']))
-        
-print(f"\n\n-------(SU diff)-------\n")
-for i in LL_COLUMNS:
-    filtered = clear_k_least_freq(df, i, REMOVE_K)
-    if i != "TARGET": 
-        print(f"{i} vs TARGET: ", symmetric_uncertainty_sklearn(filtered[i], filtered['TARGET']) - symmetric_uncertainty_sklearn(df[i], df['TARGET']))
+def permutation_test_su(x, y, k, ky, rng):
+    """H0: SU(X, TARGET) = 0 (independence). Returns null mean SU and p-value.
 
-print("\n\n--------Statistical hypothesis testing---------\n")
+    The null mean shows the upward finite-sample bias of SU for many levels.
+    """
+    obs = symmetric_uncertainty(x, y, k, ky)
+    null = np.array([symmetric_uncertainty(x, rng.permutation(y), k, ky) for _ in range(N_PERM)])
+    p = (1 + np.sum(null >= obs)) / (1 + N_PERM)
+    return null.mean(), p
 
-from scipy.stats import chi2_contingency, fisher_exact
 
-def test_rare_category_significance(df, col_name, k=2):
-    counts = df[col_name].value_counts(dropna=True)
-    rare_cats = counts.nsmallest(k).index
-    
-    is_rare = df[col_name].isin(rare_cats)
-    
-    contingency_table = pd.crosstab(is_rare, df['TARGET'])
-    contingency_table.index = ['Other Categories', 'Rare Categories']
-    
-    print(f"-------Test for column: {col_name}--------")
-    print("Contingency Table:")
-    print(contingency_table)
-    print("\nPart of TARGET=1:")
-    print(df.groupby(is_rare)['TARGET'].mean().rename({False: 'Other Categories', True: 'Rare Categories'}))
-    
-    res = fisher_exact(contingency_table)
-    p_val = res.pvalue
-        
-    print(f"\nFisher's Exact Test p-value: {p_val:.5f}")
-    if p_val < 0.05:
-        print("Result: Low-freq categories contained necessary signal.")
-    else:
-        print("Result: Low-freq categories are noise.")
-    print("-" * 50)
-    
-for i in LL_COLUMNS:
-    test_rare_category_significance(initial_df, i, k=REMOVE_K)
+def fisher_rare_vs_rest(x, y, k, thr):
+    """Fisher test: is TARGET distribution in the pooled rare levels different from the rest?"""
+    rare = rare_mask(x, k, thr)[x]
+    if not rare.any():
+        return np.nan, "no rare levels"
+    table = [[np.sum(rare & (y == 0)), np.sum(rare & (y == 1))],
+             [np.sum(~rare & (y == 0)), np.sum(~rare & (y == 1))]]
+    p = fisher_exact(table)[1]
+    return p, ("difference detected" if p < ALPHA else "no evidence of difference")
+
+
+# ANALYSIS
+
+def analyse_column(df: pd.DataFrame, col: str, y: np.ndarray, ky: int, rng) -> list:
+    x, k = encode(df[col])
+    n = len(x)
+
+    su_orig = symmetric_uncertainty(x, y, k, ky)
+    null_mean, perm_p = permutation_test_su(x, y, k, ky, rng)
+
+    idxs = [rng.integers(0, n, n) for _ in range(N_BOOT)]
+    boots = [(x[i], y[i]) for i in idxs]
+    boot_orig = [symmetric_uncertainty(xb, yb, k, ky) for xb, yb in boots]
+
+    rows = []
+    for thr in THRESHOLDS:
+        rare = rare_mask(x, k, thr)
+        row = {
+            "Feature": col, "Thr": thr,
+            "Levels": k, "Rare levels": int(rare.sum()),
+            "Rows in rare": int(rare[x].sum()),
+            "SU orig": su_orig, "SU null mean": null_mean, "Perm p (SU>0)": perm_p,
+        }
+        for name, fn in (("drop", su_drop), ("merge", su_merge)):
+            su_new = fn(x, y, k, ky, thr)
+            diffs = [fn(xb, yb, k, ky, thr) - so for (xb, yb), so in zip(boots, boot_orig)]
+            lo, hi, sig = ci_and_sig(diffs)
+            row.update({
+                f"SU {name}": su_new, f"dSU {name}": su_new - su_orig,
+                f"CI lo {name}": lo, f"CI hi {name}": hi, f"Sig {name}": sig,
+            })
+        row["Fisher p"], row["Fisher"] = fisher_rare_vs_rest(x, y, k, thr)
+        rows.append(row)
+    return rows
+
+
+def run(data_path: Path, out_path: Path) -> pd.DataFrame:
+    df = pd.read_csv(data_path, encoding="unicode_escape")
+    y, uniq = pd.factorize(df[TARGET])
+    y = y.astype(np.int64)
+    ky = len(uniq)
+
+    cols = [c for c in CATEGORICAL_COLS if c in df.columns and df[c].nunique(dropna=False) >= MIN_LEVELS]
+    print(f"Rows: {len(df)}, analysed categorical variables (>= {MIN_LEVELS} levels, NaN counted as a level): {len(cols)}")
+    print(cols, "\n")
+
+    rng = np.random.default_rng(42)
+    rows = []
+    for col in cols:
+        print("processing", col, flush=True)
+        rows += analyse_column(df, col, y, ky, rng)
+
+    res = pd.DataFrame(rows)
+    res.to_csv(out_path, index=False)
+
+    pd.set_option("display.max_columns", None)
+    pd.set_option("display.width", 250)
+    for thr in THRESHOLDS:
+        print("\n" + "=" * 100)
+        print(f"Rare level threshold = {thr:.3f}  (bootstrap {N_BOOT}, permutation {N_PERM}, alpha {ALPHA})")
+        print("=" * 100)
+        part = res[res["Thr"] == thr].drop(columns="Thr")
+        print(part.round(5).to_string(index=False))
+    print(f"\nSaved to {out_path}")
+    return res
+
+
+if __name__ == "__main__":
+    BASE_DIR = Path(__file__).resolve().parent
+    run(BASE_DIR / "DataHomeCredit.csv", BASE_DIR / "results.csv")
